@@ -1,6 +1,5 @@
 const pkg = require("./package");
 const environment = process.env.NODE_ENV || "development";
-const envSet = require(`./env.${environment}.js`);
 
 module.exports = {
   mode: "spa",
@@ -74,7 +73,6 @@ module.exports = {
       }
     }
   },
-  env: envSet,
   router: {
     scrollBehavior: function(to, from, savedPosition) {
       return new Promise((resolve, reject) => {
