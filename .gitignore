@@ -79,3 +79,10 @@ dist
 
 # IDE
 .idea
+
+# User setting
+.history
+server/db/token.json
+server/db/credentials.json
+env.*
+.vs
