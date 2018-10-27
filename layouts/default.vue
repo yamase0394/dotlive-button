@@ -24,6 +24,7 @@
     </v-navigation-drawer>
     <v-toolbar
       fixed
+      flat
       app
       clipped-left
       height="50px"
