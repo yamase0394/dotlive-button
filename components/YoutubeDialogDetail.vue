@@ -63,14 +63,14 @@
           </v-card-title>
           <v-card-actions class="clipboard">
             <v-text-field
-              :value="videoUrl"
+              :value="shareUrl"
               readonly
               hide-details
               @focus="$event.target.select()"
             />
             <v-tooltip top>
               <v-btn
-                v-clipboard:copy="videoUrl"
+                v-clipboard:copy="shareUrl"
                 v-clipboard:success="onCopy"
                 v-clipboard:error="onCopyError"
                 slot="activator"
@@ -178,7 +178,8 @@ export default {
       snackbarText: "",
       isLoop: true,
       player_vars: { start: Math.floor(this.start), rel: 0 },
-      videoUrl: `https://youtu.be/${this.videoId}?start=${Math.floor(this.start)}&end=${Math.ceil(this.end)}`
+      youTubeUrl: `https://youtu.be/${this.videoId}?start=${Math.floor(this.start)}&end=${Math.ceil(this.end)}`,
+      shareUrl: `${location.protocol}//${location.host}/video/${this.videoId}?start=${this.start}&end=${this.end}`
     };
   },
   watch: {
@@ -243,7 +244,7 @@ export default {
       this.snackbar = true;
     },
     openVideoInNewTab() {
-      window.open(this.videoUrl);
+      window.open(this.youTubeUrl);
       this.$refs.youtube.player.pauseVideo();
     }
   }

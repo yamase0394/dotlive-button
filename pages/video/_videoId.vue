@@ -70,7 +70,7 @@
               </v-flex>
               <v-flex
                 :style="{marginTop:'3px', maxHeight:'14px'}"
-                class="no-padding grey--text">YouTube
+                class="no-padding grey--text">URL
               </v-flex>
               <v-layout
                 align-center>
@@ -78,7 +78,7 @@
                   class="no-padding"
                   xs9>
                   <v-text-field
-                    :value="videoUrl"
+                    :value="shareUrl"
                     class="clipboard"
                     readonly
                     hide-details
@@ -88,7 +88,7 @@
                 <v-flex class="no-padding">
                   <v-tooltip top>
                     <v-btn
-                      v-clipboard:copy="videoUrl"
+                      v-clipboard:copy="shareUrl"
                       v-clipboard:success="onCopy"
                       v-clipboard:error="onCopyError"
                       slot="activator"
@@ -111,7 +111,7 @@
                       @click="openVideoInNewTab">
                       <v-icon
                         small>
-                        open_in_new
+                        movie
                       </v-icon>
                     </v-btn>
                     <span>YouTubeで開く</span>
@@ -232,6 +232,7 @@ export default {
       videoUrl: "",
       snackbar: false,
       snackbarText: "",
+      shareUrl: ""
     }
   },
   async asyncData({ params, query, error }) {
@@ -283,6 +284,7 @@ export default {
       start: start,
       end: end,
       videoUrl: videoUrl,
+      shareUrl: `${location.protocol}//${location.host}/video/${resVideo.data.items[1]}?start=${start}&end=${end}`,
       selectedText: selectedText,
       selectedId: selectedId
     };
