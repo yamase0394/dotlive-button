@@ -101,8 +101,7 @@ export default {
   padding: 8px;
 }
 .video-card {
-  max-width: 70vw;
-  min-width: 70vw;
+  max-width: 850px;
 }
 .video-card:hover {
   cursor: pointer;
