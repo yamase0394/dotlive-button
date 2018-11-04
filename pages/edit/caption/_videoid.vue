@@ -147,7 +147,7 @@
         justify-space-around
         row>
         <v-flex
-          style="max-width:50vw"
+          style="max-width:45vw"
           xs7>
           <v-container
             class="padding-0"
@@ -247,7 +247,7 @@
                   md3
                   class="flex-grow-0">
                   <v-btn @click="setCurrentTimeToStart">
-                    現在の位置を指定
+                    現在の再生時間
                   </v-btn>
                 </v-flex>
                 <v-flex
@@ -262,10 +262,34 @@
                 </v-flex>
                 <v-flex
                   xs6
+                  md2
+                  class="flex-grow-0">
+                  <v-btn
+                    @click="() => {
+                      selectedStart = (selectedStart * 10 + 1) / 10;
+                      formatStartTime(selectedStart);
+                  }">
+                    +0.1
+                  </v-btn>
+                </v-flex>
+                <v-flex
+                  xs6
+                  md2
+                  class="flex-grow-0">
+                  <v-btn
+                    @click="() => {
+                      selectedStart = (selectedStart * 10 - 1) / 10;
+                      formatStartTime(selectedStart);
+                  }">
+                    -0.1
+                  </v-btn>
+                </v-flex>
+                <v-flex
+                  xs6
                   md3
                   class="flex-grow-0">
                   <v-btn @click="setCurrentTimeToEnd">
-                    現在の位置を指定
+                    現在の再生時間
                   </v-btn>
                 </v-flex>
                 <v-flex
@@ -277,6 +301,30 @@
                     type="number"
                     label="終了時間（秒）"
                     @input="formatEndTime"/>
+                </v-flex>
+                <v-flex
+                  xs6
+                  md2
+                  class="flex-grow-0">
+                  <v-btn
+                    @click="() => {
+                      selectedEnd = (selectedEnd * 10 + 1) / 10;
+                      formatEndTime(selectedEnd);
+                  }">
+                    +0.1
+                  </v-btn>
+                </v-flex>
+                <v-flex
+                  xs6
+                  md2
+                  class="flex-grow-0">
+                  <v-btn
+                    @click="() => {
+                      selectedEnd = (selectedEnd * 10 - 1) / 10;
+                      formatEndTime(selectedEnd);
+                  }">
+                    -0.1
+                  </v-btn>
                 </v-flex>
                 <v-flex
                   xs12
@@ -567,6 +615,7 @@ export default {
     formatStartTime(val) {
       console.log("change start");
       const tempTime = Math.floor(Number(val) * 1000) / 1000;
+      console.log(val);
       if (tempTime > this.selectedEnd) {
         this.$nextTick(() => {
           this.selectedEnd = tempTime;
