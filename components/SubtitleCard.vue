@@ -23,25 +23,21 @@
             <p class="time__text">{{ endTime }}</p>
           </v-flex>
         </v-layout>
-        <v-flex >
-          <v-textarea
-            v-model="subtitle"
-            flat
-            solo
-            readonly
-            hide-details
-            auto-grow
-            rows="2"/>
-        </v-flex>
-        <v-flex class="flex-grow-0 padding-0">
-          <v-btn
-            class="small__btn"
-            small
-            icon
-            @click="onCloseClicked">
-            <v-icon small> close </v-icon>
-          </v-btn>
-        </v-flex>
+        <v-textarea
+          v-model="subtitle"
+          flat
+          solo
+          readonly
+          hide-details
+          auto-grow
+          rows="2"/>
+        <v-btn
+          class="small__btn"
+          small
+          icon
+          @click="onCloseClicked">
+          <v-icon small> close </v-icon>
+        </v-btn>
       </v-layout>
     </v-container>
   </v-card>
