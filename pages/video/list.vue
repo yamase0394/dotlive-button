@@ -79,9 +79,10 @@ import InfiniteLoading from 'vue-infinite-loading';
 
 const ITEM_PER_PAGE = 20;
 const SESSION_STORAGE_CHANNEL_FILTER = "videoListPreChannelFilter";
+const SESSION_STORAGE_CAPTION_FILTER = "videoListPreCaptionFilter";
 const SESSION_STORAGE_DISPLAY_ITEMS = "videoListPreDisplayItems";
-const LOCAL_STORAGE_VIDEO_DATA_VERSION = "videoDataVersion";
-const LOCAL_STORAGE_VIDEO_DATA = "videoData";
+const SESSION_STORAGE_VIDEO_DATA_VERSION = "videoDataVersion";
+const SESSION_STORAGE_VIDEO_DATA = "videoData";
 
 export default {
   components: {
@@ -108,14 +109,14 @@ export default {
     console.log("asyncData");
     const items = await axios.post("/api/video", {
       type: "all",
-      version: localStorage.getItem(LOCAL_STORAGE_VIDEO_DATA_VERSION)
+      version: sessionStorage.getItem(SESSION_STORAGE_VIDEO_DATA_VERSION)
     }).then(res => {
       if (res.status === 204) {
-        return JSON.parse(localStorage.getItem(LOCAL_STORAGE_VIDEO_DATA));
+        return JSON.parse(sessionStorage.getItem(SESSION_STORAGE_VIDEO_DATA));
       }
 
-      localStorage.setItem(LOCAL_STORAGE_VIDEO_DATA_VERSION, res.data.version);
-      localStorage.setItem(LOCAL_STORAGE_VIDEO_DATA, JSON.stringify(res.data.items));
+      sessionStorage.setItem(SESSION_STORAGE_VIDEO_DATA_VERSION, res.data.version);
+      sessionStorage.setItem(SESSION_STORAGE_VIDEO_DATA, JSON.stringify(res.data.items));
       return res.data.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
@@ -158,29 +159,40 @@ export default {
       const split = query.caption.split(",");
       filteredItems = filteredItems.filter(e => split.some(cond => cond === e[6]));
     } else {
+      filter.caption = "あり";
       filteredItems = filteredItems.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
-    }
-
-    let displayItems;
-    if (sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS) &&
-      query.channel == sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER)) {
-      console.log("hit cache");
-      displayItems = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS));
-    } else {
-      console.log("no cache");
-      displayItems = filteredItems.slice(0, Math.min(ITEM_PER_PAGE, filteredItems.length));
-      sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(displayItems));
-      if (channelNameToId[filter.channel]) {
-        sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER, channelNameToId[filter.channel]);
-      } else {
-        sessionStorage.removeItem(SESSION_STORAGE_CHANNEL_FILTER);
-      }
     }
 
     const captionFilterItemToStatus = {};
     Object.keys(captionStatusToFilterItems).forEach(key => {
       captionFilterItemToStatus[captionStatusToFilterItems[key]] = key;
     });
+    let displayItems;
+    if (sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS) &&
+      (query.channel === sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER) ||
+        !query.channel && !sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER)) &&
+      (query.caption === sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER) ||
+        !query.caption && !sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER))) {
+      console.log("hit cache");
+      displayItems = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS));
+    } else {
+      console.log("no cache");
+      displayItems = filteredItems.slice(0, Math.min(ITEM_PER_PAGE, filteredItems.length));
+
+      sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(displayItems));
+
+      if (channelNameToId[filter.channel]) {
+        sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER, channelNameToId[filter.channel]);
+      } else {
+        sessionStorage.removeItem(SESSION_STORAGE_CHANNEL_FILTER);
+      }
+
+      if (channelNameToId[filter.caption]) {
+        sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER, captionFilterItemToStatus[filter.caption]);
+      } else {
+        sessionStorage.removeItem(SESSION_STORAGE_CAPTION_FILTER);
+      }
+    }
 
     return {
       items: items,
@@ -210,10 +222,13 @@ export default {
       }
 
       if (this.captionStatusToFilterItems[to.query.caption]) {
+        sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER, to.query.caption);
         this.filter.caption = this.captionStatusToFilterItems[to.query.caption];
         const split = to.query.caption.split(",");
         this.filteredItems = this.filteredItems.filter(e => split.some(cond => cond === e[6]));
       } else {
+        sessionStorage.removeItem(SESSION_STORAGE_CAPTION_FILTER);
+        this.filter.caption = "あり";
         this.filteredItems = this.filteredItems.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
       }
 
