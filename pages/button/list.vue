@@ -7,6 +7,7 @@
       <v-select
         v-model="filter.channel"
         :items="channelFilterItems"
+        :menu-props="{ maxHeight: '80vh' }"
         @change="onChannelFilterChanged"
       />
     </v-flex>

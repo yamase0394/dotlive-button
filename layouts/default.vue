@@ -77,7 +77,8 @@ export default {
       items: [
         { icon: 'apps', title: 'ボタン', to: '/button' },
         { icon: 'local_movies', title: '動画', to: '/video/list' },
-        { icon: "description", title: "このサイトについて", to: "/about" }
+        { icon: "subtitles", title: "字幕作成", to: "/edit/caption" },
+        { icon: "description", title: "このサイトについて", to: "/about" },
       ],
       title: '.LIVE ボタン',
       searchText: "",

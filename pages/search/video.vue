@@ -4,6 +4,7 @@
     grid-list-md
     fluid
     class="video-list-container">
+    <caption-status-filter-help-dialog ref="captionFilterHelpDialog"/>
     <v-fab-transition>
       <v-btn
         v-show="scrollToTopFab"
@@ -26,14 +27,32 @@
         </p>
       </v-flex>
       <v-layout
+        align-center
         row>
         <v-flex>
           <v-select
             v-model="filter.channel"
             :items="channelFilterItems"
+            :menu-props="{ maxHeight: '80vh' }"
+            label="チャンネル"
             @change="onChannelFilterChanged"
           />
         </v-flex>
+        <v-flex>
+          <v-select
+            v-model="filter.caption"
+            :items="captionFilterItems"
+            :menu-props="{ maxHeight: '80vh' }"
+            label="字幕"
+            @change="onCaptionFilterChanged"
+          />
+        </v-flex>
+        <v-btn
+          icon
+          small
+          @click="openCaptionFilterHelpDialog">
+          <v-icon>help_outline</v-icon>
+        </v-btn>
       </v-layout>
       <v-flex
         v-for="item in displayItems"
@@ -45,6 +64,7 @@
           :description="item[4]"
           :thumbnail="item[5]"
           :video-id="item[1]"
+          :caption-status="item[6]"
         />
       </v-flex>
     </v-layout>
@@ -60,6 +80,7 @@
 
 <script>
 import VideoCard from '~/components/VideoCard.vue'
+import CaptionStatusFilterHelpDialog from '~/components/CaptionStatusFilterHelpDialog.vue'
 import axios from "axios"
 import InfiniteLoading from 'vue-infinite-loading';
 
@@ -73,17 +94,21 @@ const LOCAL_STORAGE_VIDEO_DATA = "videoData";
 export default {
   components: {
     InfiniteLoading,
-    VideoCard
+    VideoCard,
+    CaptionStatusFilterHelpDialog
   },
   data() {
     return {
       items: [],
-      fliteredItems: [],
+      filteredItems: [],
       displayItems: [],
       filter: null,
       channelNameToId: {},
       channelIdToName: {},
       channelFilterItems: [],
+      captionFilterItems: null,
+      captionStatusToFilterItems: null,
+      captionFilterItemToStatus: null,
       resultCount: 0,
       scrollToTopFab: false
     }
@@ -107,7 +132,7 @@ export default {
       error({ statusCode: 404, message: 'Page not found' });
     });
 
-    const channelIds = await axios.get("/api/subtitle/channel").then(res => {
+    const channelIds = await axios.get("/api/channel/list").then(res => {
       return res.data.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
@@ -115,8 +140,8 @@ export default {
 
     const channelNameToId = {};
     const channelIdToName = {};
-    const filter = { channel: "すべて" };
-    let fliteredItems = items;
+    const filter = { channel: "すべて", caption: "あり" };
+    let filteredItems = items;
     for (let channelId of channelIds) {
       const res = await axios.get(`/api/channel/${channelId}`).catch(e => {
         this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
@@ -127,19 +152,36 @@ export default {
 
     if (channelIdToName[query.channel]) {
       filter.channel = channelIdToName[query.channel];
-      fliteredItems = items.filter(e => e[0] === query.channel);
+      filteredItems = filteredItems.filter(e => e[0] === query.channel);
+    }
+
+    const captionStatusToFilterItems = {
+      "uploaded,dotlive_button": "あり",
+      "dotlive_button": "どっとライブボタン限定",
+      "can_upload": "アップロード可能",
+      "editable": "編集可",
+      "not_permitted": "編集不可",
+      "waiting_ack": "審査待ち",
+      "checking": "確認中"
+    };
+    if (captionStatusToFilterItems[query.caption]) {
+      filter.caption = captionStatusToFilterItems[query.caption];
+      const split = query.caption.split(",");
+      filteredItems = filteredItems.filter(e => split.some(cond => cond === e[6]));
+    } else {
+      filteredItems = filteredItems.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
     }
 
     if (query.keyword) {
       const searchRegs = query.keyword.split(/\s+/).map(str => new RegExp(str, "i"));
-      fliteredItems = fliteredItems.filter(e => searchRegs.every(reg => reg.test(e[3]) || reg.test[4]));
+      filteredItems = filteredItems.filter(e => searchRegs.every(reg => reg.test(e[3]) || reg.test[4]));
       sessionStorage.setItem(SESSION_STORAGE_KEYWORD, query.keyword);
     } else {
-      fliteredItems = [];
+      filteredItems = [];
       sessionStorage.removeItem(SESSION_STORAGE_KEYWORD)
     }
 
-    let displayItems = fliteredItems.slice(0, Math.min(ITEM_PER_PAGE, fliteredItems.length));
+    let displayItems = filteredItems.slice(0, Math.min(ITEM_PER_PAGE, filteredItems.length));
     if (sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS) &&
       query.channel == sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER) &&
       sessionStorage.getItem(SESSION_STORAGE_KEYWORD) &&
@@ -148,7 +190,7 @@ export default {
       displayItems = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS));
     } else {
       console.log("no cache");
-      displayItems = fliteredItems.slice(0, Math.min(ITEM_PER_PAGE, fliteredItems.length));
+      displayItems = filteredItems.slice(0, Math.min(ITEM_PER_PAGE, filteredItems.length));
       sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(displayItems));
       if (channelNameToId[filter.channel]) {
         sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER, channelNameToId[filter.channel]);
@@ -157,15 +199,23 @@ export default {
       }
     }
 
+    const captionFilterItemToStatus = {};
+    Object.keys(captionStatusToFilterItems).forEach(key => {
+      captionFilterItemToStatus[captionStatusToFilterItems[key]] = key;
+    });
+
     return {
       items: items,
-      fliteredItems: fliteredItems,
+      filteredItems: filteredItems,
       displayItems: displayItems,
       channelNameToId: channelNameToId,
       channelIdToName: channelIdToName,
       channelFilterItems: ["すべて", ...Object.keys(channelNameToId)],
       filter: filter,
-      resultCount: fliteredItems.length
+      resultCount: filteredItems.length,
+      captionStatusToFilterItems: captionStatusToFilterItems,
+      captionFilterItemToStatus: captionFilterItemToStatus,
+      captionFilterItems: Object.keys(captionFilterItemToStatus)
     }
   },
   watch: {
@@ -194,10 +244,18 @@ export default {
         sessionStorage.removeItem(SESSION_STORAGE_CHANNEL_FILTER);
       }
 
+      if (this.captionStatusToFilterItems[to.query.caption]) {
+        this.filter.caption = this.captionStatusToFilterItems[to.query.caption];
+        const split = to.query.caption.split(",");
+        temp = temp.filter(e => split.some(cond => cond === e[6]));
+      } else {
+        temp = temp.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
+      }
+
       this.$refs.infiniteLoading.$emit("$InfiniteLoading:reset");
-      this.fliteredItems = temp;
-      this.resultCount = this.fliteredItems.length;
-      this.displayItems = this.fliteredItems.slice(0, Math.min(ITEM_PER_PAGE, this.fliteredItems.length));
+      this.filteredItems = temp;
+      this.resultCount = this.filteredItems.length;
+      this.displayItems = this.filteredItems.slice(0, Math.min(ITEM_PER_PAGE, this.filteredItems.length));
       sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(this.displayItems));
 
       // this.$nextTick(() => {
@@ -215,21 +273,29 @@ export default {
       //ブラウザの進むor戻るでない
       if (this.$route.query.channel !== this.channelNameToId[value]) {
         console.log(`channel filter changed:${value}`);
-        this.$router.push({ query: { keyword: this.$route.query.keyword, channel: this.channelNameToId[value] } });
+        this.$router.push({ query: { keyword: this.$route.query.keyword, channel: this.channelNameToId[value], caption: this.$route.query.caption } });
+      }
+
+      this.$refs.infiniteLoading.$emit("$InfiniteLoading:reset");
+    },
+    onCaptionFilterChanged(val) {
+      if (this.$route.query.caption !== this.captionFilterItemToStatus[val]) {
+        console.log(`caption filter changed:${val}`);
+        this.$router.push({ query: { keyword: this.$route.query.keyword, channel: this.$route.query.channel, caption: this.captionFilterItemToStatus[val] } });
       }
 
       this.$refs.infiniteLoading.$emit("$InfiniteLoading:reset");
     },
     infiniteHandler($state) {
-      if (this.fliteredItems.length === this.displayItems.length) {
+      if (this.filteredItems.length === this.displayItems.length) {
         $state.complete();
         return;
       }
 
       setTimeout(() => {
         const temp = [];
-        for (let i = this.displayItems.length; i < Math.min(this.displayItems.length + ITEM_PER_PAGE, this.fliteredItems.length); i++) {
-          temp.push(this.fliteredItems[i]);
+        for (let i = this.displayItems.length; i < Math.min(this.displayItems.length + ITEM_PER_PAGE, this.filteredItems.length); i++) {
+          temp.push(this.filteredItems[i]);
         }
         this.displayItems = this.displayItems.concat(temp);
         sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(this.displayItems));
@@ -250,6 +316,9 @@ export default {
         this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
       });
       this.scrollToTopFab = false;
+    },
+    openCaptionFilterHelpDialog() {
+      this.$refs.captionFilterHelpDialog.open();
     }
   },
 }

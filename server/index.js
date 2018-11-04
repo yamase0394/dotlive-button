@@ -18,6 +18,7 @@ app.use("/api/subtitle", require("./api/subtitle"));
 app.use("/api/video", require("./api/video"));
 app.use("/api/channel", require("./api/channel"));
 app.use("/api/search", require("./api/search"));
+app.use("/api/edit/subtitle", require("./api/edit/subtitle"));
 
 async function start() {
   // Init Nuxt.js

@@ -62,11 +62,19 @@ export default {
     videoId: {
       type: String,
       required: true
+    },
+    captionStatus: {
+      type: String,
+      required: true
     }
   },
   methods: {
     onCardClicked() {
-      this.$router.push(`/video/${this.videoId}`);
+      if (this.captionStatus === "uploaded" || this.captionStatus === "not_uploaded") {
+        this.$router.push(`/video/${this.videoId}`);
+      } else {
+        this.$router.push({ path: `/edit/caption/${this.videoId}`, query: { status: this.captionStatus } });
+      }
     }
   }
 }

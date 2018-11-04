@@ -1,7 +1,6 @@
 const AsyncLock = require("async-lock");
 const lock = new AsyncLock();
 const shortid = require("shortid");
-const fs = require("fs");
 const { promisify } = require("util");
 const { google } = require("googleapis");
 require("dotenv").config();
@@ -11,6 +10,54 @@ const db = {};
 const youtube = google.youtube({
   version: "v3",
   auth: process.env.youtubeApiKey
+});
+
+let slackToken;
+let channel;
+if (process.env.NODE_ENV === "development") {
+  slackToken = process.env.slackApiKeyDev;
+  channel = "#dotlive_button_dev";
+} else {
+  slackToken = process.env.slackApiKey;
+  channel = "#dotlive_button";
+}
+const Botkit = require("botkit");
+const controller = Botkit.slackbot({
+  debug: false
+});
+const bot = controller
+  .spawn({ token: slackToken })
+  .startRTM((err, bot, payload) => {
+    if (err) {
+      throw new Error(err);
+    }
+  });
+controller.hears("update:video-info", "direct_mention", async function(
+  bot,
+  message
+) {
+  try {
+    await initVideoSheet();
+    bot.reply(message, "ok");
+  } catch (e) {
+    bot.reply(message, `failed to init video sheet. \r\n ${e}`);
+    throw e;
+  }
+});
+controller.hears("update:subtitle", "direct_mention", async function(
+  bot,
+  message
+) {
+  try {
+    await initSubtitleSheet();
+    bot.reply(message, "ok");
+  } catch (e) {
+    bot.reply(message, `failed to init subtitle sheet. \r\n ${e}`);
+    throw e;
+  }
+});
+controller.hears("ping", "direct_mention", async function(bot, message) {
+  bot.reply(message, "pong");
 });
 
 const auth = authorize({
@@ -43,49 +90,77 @@ function authorize(credentials) {
     token_type: process.env.sheet_token_type,
     expiry_date: process.env.sheet_token_expiry_date
   };
+  console.log(token);
   oAuth2Client.setCredentials(token);
   return oAuth2Client;
 }
 
-const Botkit = require("botkit");
-const channel = "#dotlive_button";
-const controller = Botkit.slackbot({
-  debug: false
-});
-const bot = controller
-  .spawn({ token: process.env.slackApiKey })
-  .startRTM((err, bot, payload) => {
-    if (err) {
-      throw new Error(err);
+db.createSheet = async title => {
+  return await promisify(sheets.spreadsheets.batchUpdate.bind(sheets))({
+    spreadsheetId: process.env.sheetId,
+    resource: {
+      requests: [
+        {
+          addSheet: {
+            properties: {
+              title: title
+            }
+          }
+        }
+      ]
     }
-  });
-controller.hears("update:video-info", "direct_mention", async function(
-  bot,
-  message
-) {
-  try {
-    await initVideoSheet();
-    bot.reply(message, "ok");
-  } catch (e) {
-    bot.reply(message, `failed to init video sheet. \r\n ${e}`);
-    throw e;
-  }
-});
-controller.hears("update:subtitle", "direct_mention", async function(
-  bot,
-  message
-) {
-  try {
-    await initSubtitleSheet();
-    bot.reply(message, "ok");
-  } catch (e) {
-    bot.reply(message, `failed to init subtitle sheet. \r\n ${e}`);
-    throw e;
-  }
-});
-controller.hears("ping", "direct_mention", async function(bot, message) {
-  bot.reply("pong");
-});
+  })
+    .then(res => {
+      bot.say({
+        text: `createSheet\r\n${JSON.stringify(res.data)}`,
+        channel: channel
+      });
+      return { result: "success" };
+    })
+    .catch(e => {
+      if (e.toString().includes("別の名前を入力してください")) {
+        bot.say({
+          text: e.toString(),
+          channel: channel
+        });
+        return {
+          result: "failed",
+          message: "この動画の字幕は既に存在しています"
+        };
+      } else {
+        bot.say({
+          text: e.toString(),
+          channel: channel
+        });
+        return { result: "failed", message: "不明なエラー" };
+      }
+    });
+};
+
+db.writeToSheet = async (title, items) => {
+  return await promisify(sheets.spreadsheets.values.update.bind(sheets))({
+    spreadsheetId: process.env.sheetId,
+    range: title,
+    valueInputOption: "USER_ENTERED",
+    resource: {
+      values: items
+    }
+  })
+    .then(res => {
+      bot.say({
+        text: `writeToSheet\r\n${JSON.stringify(res.data)}`,
+        channel: channel
+      });
+      return { result: "success" };
+    })
+    .catch(e => {
+      bot.say({
+        text: e.toString(),
+        channel: channel
+      });
+      return { result: "failed", message: "不明なエラー" };
+    });
+};
 
 const channelIdToData = new Map();
 
@@ -284,6 +359,25 @@ db.getChannelContainsSubtitle = async function() {
   return await lock.acquire(Object.keys({ channelIdToSubtitles })[0], () => {
     return [...channelIdToSubtitles.keys()];
   });
+};
+
+db.getChannelList = function() {
+  return [
+    "UC02LBsjt_Ehe7k0CuiNC6RQ",
+    "UC1519-d1jzGiL1MPTxEdtSA",
+    "UC5nfcGkOAm3JwfPvJvzplHg",
+    "UC6TyfKcsrPwBsBnx2QobVLQ",
+    "UCiGcHHHT3kBB1IGOrv7f3qQ",
+    "UCKUcnaLsG2DeQqza8zRXHiA",
+    "UCLhUvJ_wO9hOvv_yYENu4fQ",
+    "UCmM5LprTu6-mSlIiRNkiXYg",
+    "UCMzxQ58QL4NNbWghGymtHvw",
+    "UCOefINa2_BmpuX4BbHjdk9A",
+    "UCP9ZgeIJ3Ri9En69R0kJc9Q",
+    "UCUZ5AlC3rTlM-rA2cj5RP6w",
+    "UCyb-cllCkMREr9de-hoiDrg",
+    "UCz6Gi81kE6p5cdW1rT0ixqw"
+  ];
 };
 
 db.searchSubtitle = async (searchText, page, itemPerPage) => {
