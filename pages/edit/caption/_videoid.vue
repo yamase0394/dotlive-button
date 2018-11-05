@@ -33,7 +33,6 @@
     </v-snackbar>
     <v-dialog
       v-model="progressDialog"
-      hide-overlay
       persistent
       width="300"
     >
