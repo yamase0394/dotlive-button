@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 
 const db = require(`${process.cwd()}/server/db/db`);
+const slack = require(`${process.cwd()}/server/slackbot`);
 
 router.post("/", async function(req, res) {
   try {
@@ -19,6 +20,8 @@ router.post("/", async function(req, res) {
       res.status(404).send(result.message);
       return;
     }
+
+    slack.say(`<@saku-tama> newSheet:${reqJson.videoId}`);
 
     res.send(result);
   } catch (e) {
