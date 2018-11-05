@@ -70,9 +70,9 @@ export default {
   },
   methods: {
     onCardClicked() {
-      if (this.captionStatus === "uploaded" || this.captionStatus === "not_uploaded") {
+      if (this.captionStatus === "uploaded" || this.captionStatus === "dotlive_button") {
         this.$router.push(`/video/${this.videoId}`);
-      } else {
+      } else if (this.captionStatus === "editable" || this.captionStatus === "not_permitted") {
         this.$router.push({ path: `/edit/caption/${this.videoId}`, query: { status: this.captionStatus } });
       }
     }
