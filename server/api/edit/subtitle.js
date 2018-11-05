@@ -1,8 +1,13 @@
 var express = require("express");
 var router = express.Router();
-
 const db = require(`${process.cwd()}/server/db/db`);
 const slack = require(`${process.cwd()}/server/slackbot`);
+require("dotenv").config();
+
+const captionManager =
+  process.env.NODE_ENV === "production"
+    ? process.env.CAPTION_MANAGER_NAME
+    : process.env.CAPTION_MANAGER_NAME_DEV;
 
 router.post("/", async function(req, res) {
   try {
@@ -21,7 +26,7 @@ router.post("/", async function(req, res) {
       return;
     }
 
-    slack.say(`<@saku-tama> newSheet:${reqJson.videoId}`);
+    slack.say(`<@${captionManager}> newSheet:${reqJson.videoId}`);
 
     res.send(result);
   } catch (e) {
