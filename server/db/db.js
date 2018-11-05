@@ -3,6 +3,7 @@ const lock = new AsyncLock();
 const shortid = require("shortid");
 const { promisify } = require("util");
 const { google } = require("googleapis");
+const slack = require(`${process.cwd()}/server/slackbot`);
 require("dotenv").config();
 
 const db = {};
@@ -12,27 +13,7 @@ const youtube = google.youtube({
   auth: process.env.youtubeApiKey
 });
 
-let slackToken;
-let channel;
-if (process.env.NODE_ENV === "development") {
-  slackToken = process.env.slackApiKeyDev;
-  channel = "#dotlive_button_dev";
-} else {
-  slackToken = process.env.slackApiKey;
-  channel = "#dotlive_button";
-}
-const Botkit = require("botkit");
-const controller = Botkit.slackbot({
-  debug: false
-});
-const bot = controller
-  .spawn({ token: slackToken })
-  .startRTM((err, bot, payload) => {
-    if (err) {
-      throw new Error(err);
-    }
-  });
-controller.hears("update:video-info", "direct_mention", async function(
+slack.controller.hears("update:video-info", "direct_mention", async function(
   bot,
   message
 ) {
@@ -44,7 +25,7 @@ controller.hears("update:video-info", "direct_mention", async function(
     throw e;
   }
 });
-controller.hears("update:subtitle", "direct_mention", async function(
+slack.controller.hears("update:subtitle", "direct_mention", async function(
   bot,
   message
 ) {
@@ -55,9 +36,6 @@ controller.hears("update:subtitle", "direct_mention", async function(
     bot.reply(message, `failed to init subtitle sheet. \r\n ${e}`);
     throw e;
   }
-});
-controller.hears("ping", "direct_mention", async function(bot, message) {
-  bot.reply(message, "pong");
 });
 
 const auth = authorize({
@@ -111,27 +89,18 @@ db.createSheet = async title => {
     }
   })
     .then(res => {
-      bot.say({
-        text: `createSheet\r\n${JSON.stringify(res.data)}`,
-        channel: channel
-      });
+      slack.say(`createSheet\r\n${JSON.stringify(res.data)}`);
       return { result: "success" };
     })
     .catch(e => {
       if (e.toString().includes("別の名前を入力してください")) {
-        bot.say({
-          text: e.toString(),
-          channel: channel
-        });
+        slack.say(e.toString());
         return {
           result: "failed",
           message: "この動画の字幕は既に存在しています"
         };
       } else {
-        bot.say({
-          text: e.toString(),
-          channel: channel
-        });
+        slack.say(e.toString());
         return { result: "failed", message: "不明なエラー" };
       }
     });
@@ -147,17 +116,11 @@ db.writeToSheet = async (title, items) => {
     }
   })
     .then(res => {
-      bot.say({
-        text: `writeToSheet\r\n${JSON.stringify(res.data)}`,
-        channel: channel
-      });
+      slack.say(`writeToSheet\r\n${JSON.stringify(res.data)}`);
       return { result: "success" };
     })
     .catch(e => {
-      bot.say({
-        text: e.toString(),
-        channel: channel
-      });
+      slack.say(e.toString());
       return { result: "failed", message: "不明なエラー" };
     });
 };
@@ -170,10 +133,7 @@ const channelIdToVideoInfos = new Map();
 try {
   initVideoSheet();
 } catch (e) {
-  bot.say({
-    text: `failed to init video sheet. \r\n ${e}`,
-    channel: channel
-  });
+  slack.say(`failed to init video sheet. \r\n ${e}`);
 
   throw e;
 }
@@ -185,10 +145,7 @@ const channelIdToSubtitles = new Map();
 try {
   initSubtitleSheet();
 } catch (e) {
-  bot.say({
-    text: `failed to init subtitle sheet. \r\n ${e}`,
-    channel: channele
-  });
+  slack.say(`failed to init subtitle sheet. \r\n ${e}`);
 
   throw e;
 }
