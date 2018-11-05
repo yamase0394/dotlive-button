@@ -73,9 +73,13 @@ function authorize(credentials) {
   return oAuth2Client;
 }
 
+const uploadCaptionSpreadsheetId =
+  process.env.NODE_ENV === "production"
+    ? process.env.UPLOAD_CAPTION_SPREADSHEET_ID
+    : process.env.UPLOAD_CAPTION_SPREADSHEET_ID_DEV;
 db.createSheet = async title => {
   return await promisify(sheets.spreadsheets.batchUpdate.bind(sheets))({
-    spreadsheetId: process.env.sheetId,
+    spreadsheetId: uploadCaptionSpreadsheetId,
     resource: {
       requests: [
         {
@@ -108,7 +112,7 @@ db.createSheet = async title => {
 
 db.writeToSheet = async (title, items) => {
   return await promisify(sheets.spreadsheets.values.update.bind(sheets))({
-    spreadsheetId: process.env.sheetId,
+    spreadsheetId: uploadCaptionSpreadsheetId,
     range: title,
     valueInputOption: "USER_ENTERED",
     resource: {
