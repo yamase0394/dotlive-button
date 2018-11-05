@@ -70,7 +70,10 @@ export default {
   },
   methods: {
     onCardClicked() {
-      if (this.captionStatus === "uploaded" || this.captionStatus === "dotlive_button") {
+      if (this.captionStatus === "uploaded"
+        || this.captionStatus === "dotlive_button"
+        || this.captionStatus === "can_upload"
+        || this.captionStatus === "waiting_ack") {
         this.$router.push(`/video/${this.videoId}`);
       } else if (this.captionStatus === "editable" || this.captionStatus === "not_permitted") {
         this.$router.push({ path: `/edit/caption/${this.videoId}`, query: { status: this.captionStatus } });
