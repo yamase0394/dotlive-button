@@ -266,10 +266,10 @@
                   class="flex-grow-0">
                   <v-btn
                     @click="() => {
-                      selectedStart = (selectedStart * 10 + 1) / 10;
+                      selectedStart = (selectedStart * 10 - 1) / 10;
                       formatStartTime(selectedStart);
                   }">
-                    +0.1
+                    -0.1
                   </v-btn>
                 </v-flex>
                 <v-flex
@@ -278,10 +278,10 @@
                   class="flex-grow-0">
                   <v-btn
                     @click="() => {
-                      selectedStart = (selectedStart * 10 - 1) / 10;
+                      selectedStart = (selectedStart * 10 + 1) / 10;
                       formatStartTime(selectedStart);
                   }">
-                    -0.1
+                    +0.1
                   </v-btn>
                 </v-flex>
                 <v-flex
@@ -308,10 +308,10 @@
                   class="flex-grow-0">
                   <v-btn
                     @click="() => {
-                      selectedEnd = (selectedEnd * 10 + 1) / 10;
+                      selectedEnd = (selectedEnd * 10 - 1) / 10;
                       formatEndTime(selectedEnd);
                   }">
-                    +0.1
+                    -0.1
                   </v-btn>
                 </v-flex>
                 <v-flex
@@ -320,10 +320,10 @@
                   class="flex-grow-0">
                   <v-btn
                     @click="() => {
-                      selectedEnd = (selectedEnd * 10 - 1) / 10;
+                      selectedEnd = (selectedEnd * 10 + 1) / 10;
                       formatEndTime(selectedEnd);
                   }">
-                    -0.1
+                    +0.1
                   </v-btn>
                 </v-flex>
                 <v-flex
