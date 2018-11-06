@@ -73,6 +73,10 @@ function authorize(credentials) {
   return oAuth2Client;
 }
 
+const spreadsheetId =
+  process.env.NODE_ENV === "production"
+    ? process.env.SPREADSHEET_ID
+    : process.env.SPREADSHEET_ID_DEV;
 const uploadCaptionSpreadsheetId =
   process.env.NODE_ENV === "production"
     ? process.env.UPLOAD_CAPTION_SPREADSHEET_ID
@@ -247,7 +251,7 @@ async function initVideoInfos() {
 
 async function fetchVideoInfo() {
   return await promisify(sheets.spreadsheets.values.get.bind(sheets))({
-    spreadsheetId: process.env.sheetId,
+    spreadsheetId: spreadsheetId,
     range: `videoInfo`
   }).then(res => {
     const rows = res.data.values;
@@ -413,7 +417,7 @@ async function initSubtitles() {
   const resultSubtitles = await promisify(
     sheets.spreadsheets.values.get.bind(sheets)
   )({
-    spreadsheetId: process.env.sheetId,
+    spreadsheetId: spreadsheetId,
     range: "Sheet1"
   }).then(res => {
     const rows = res.data.values;
