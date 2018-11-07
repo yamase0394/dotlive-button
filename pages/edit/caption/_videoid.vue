@@ -197,10 +197,34 @@
                   <v-btn
                     depressed
                     class="small-button"
+                    @click="replayVideo(1)"
+                  >
+                    <v-icon left>
+                      chevron_left
+                    </v-icon>
+                    1秒
+                  </v-btn>
+                </v-flex>
+                <v-flex class="flex-grow-0">
+                  <v-btn
+                    depressed
+                    class="small-button"
                     @click="onPlayButtonClicked"
                   >
                     <v-icon>
                       {{ playIcon }}
+                    </v-icon>
+                  </v-btn>
+                </v-flex>
+                <v-flex class="flex-grow-0">
+                  <v-btn
+                    depressed
+                    class="small-button"
+                    @click="forwardVideo(1)"
+                  >
+                    1秒
+                    <v-icon right>
+                      chevron_right
                     </v-icon>
                   </v-btn>
                 </v-flex>
@@ -260,28 +284,59 @@
                     @input="formatStartTime"/>
                 </v-flex>
                 <v-flex
-                  xs6
-                  md2
-                  class="flex-grow-0">
-                  <v-btn
-                    @click="() => {
-                      selectedStart = (selectedStart * 10 - 1) / 10;
-                      formatStartTime(selectedStart);
-                  }">
-                    -0.1
-                  </v-btn>
-                </v-flex>
-                <v-flex
-                  xs6
-                  md2
-                  class="flex-grow-0">
-                  <v-btn
-                    @click="() => {
-                      selectedStart = (selectedStart * 10 + 1) / 10;
-                      formatStartTime(selectedStart);
-                  }">
-                    +0.1
-                  </v-btn>
+                  xs12
+                  md5>
+                  <v-layout
+                    wrap>
+                    <v-flex
+                      xs6
+                      md3
+                      class="flex-grow-0">
+                      <v-btn
+                        @click="() => {
+                          selectedStart = selectedStart - 1;
+                          formatStartTime(selectedStart);
+                      }">
+                        -1
+                      </v-btn>
+                    </v-flex>
+                    <v-flex
+                      xs6
+                      md3
+                      class="flex-grow-0">
+                      <v-btn
+                        @click="() => {
+                          selectedStart = (selectedStart * 10 - 1) / 10;
+                          formatStartTime(selectedStart);
+                      }">
+                        -0.1
+                      </v-btn>
+                    </v-flex>
+                    <v-flex
+                      xs6
+                      md3
+                      class="flex-grow-0">
+                      <v-btn
+                        @click="() => {
+                          selectedStart = (selectedStart * 10 + 1) / 10;
+                          formatStartTime(selectedStart);
+                      }">
+                        +0.1
+                      </v-btn>
+                    </v-flex>
+                    <v-flex
+                      xs6
+                      md3
+                      class="flex-grow-0">
+                      <v-btn
+                        @click="() => {
+                          selectedStart = selectedStart + 1;
+                          formatStartTime(selectedStart);
+                      }">
+                        +1
+                      </v-btn>
+                    </v-flex>
+                  </v-layout>
                 </v-flex>
                 <v-flex
                   xs6
@@ -302,28 +357,58 @@
                     @input="formatEndTime"/>
                 </v-flex>
                 <v-flex
-                  xs6
-                  md2
-                  class="flex-grow-0">
-                  <v-btn
-                    @click="() => {
-                      selectedEnd = (selectedEnd * 10 - 1) / 10;
-                      formatEndTime(selectedEnd);
-                  }">
-                    -0.1
-                  </v-btn>
-                </v-flex>
-                <v-flex
-                  xs6
-                  md2
-                  class="flex-grow-0">
-                  <v-btn
-                    @click="() => {
-                      selectedEnd = (selectedEnd * 10 + 1) / 10;
-                      formatEndTime(selectedEnd);
-                  }">
-                    +0.1
-                  </v-btn>
+                  xs12
+                  md5>
+                  <v-layout wrap>
+                    <v-flex
+                      xs6
+                      md3
+                      class="flex-grow-0">
+                      <v-btn
+                        @click="() => {
+                          selectedEnd = selectedEnd -1;
+                          formatEndTime(selectedEnd);
+                      }">
+                        -1
+                      </v-btn>
+                    </v-flex>
+                    <v-flex
+                      xs6
+                      md3
+                      class="flex-grow-0">
+                      <v-btn
+                        @click="() => {
+                          selectedEnd = (selectedEnd * 10 - 1) / 10;
+                          formatEndTime(selectedEnd);
+                      }">
+                        -0.1
+                      </v-btn>
+                    </v-flex>
+                    <v-flex
+                      xs6
+                      md3
+                      class="flex-grow-0">
+                      <v-btn
+                        @click="() => {
+                          selectedEnd = (selectedEnd * 10 + 1) / 10;
+                          formatEndTime(selectedEnd);
+                      }">
+                        +0.1
+                      </v-btn>
+                    </v-flex>
+                    <v-flex
+                      xs6
+                      md3
+                      class="flex-grow-0">
+                      <v-btn
+                        @click="() => {
+                          selectedEnd = selectedEnd + 1;
+                          formatEndTime(selectedEnd);
+                      }">
+                        +1
+                      </v-btn>
+                    </v-flex>
+                  </v-layout>
                 </v-flex>
                 <v-flex
                   xs12
