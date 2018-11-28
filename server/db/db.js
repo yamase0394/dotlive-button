@@ -421,6 +421,7 @@ async function initSubtitles() {
     range: "Sheet1"
   }).then(res => {
     const rows = res.data.values;
+    rows.shift();
     if (rows.length) {
       return rows;
     } else {
