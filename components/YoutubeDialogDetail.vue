@@ -23,17 +23,19 @@
               <v-btn
                 slot="activator"
                 :value="true"
-                flat>
+                flat
+              >
                 <v-icon>loop</v-icon>
               </v-btn>
               <span>リピート再生する</span>
             </v-tooltip>
           </v-btn-toggle>
-          <v-spacer/>
+          <v-spacer />
           <v-btn
             left
             icon
-            @click="dialog = false">
+            @click="dialog = false"
+          >
             <v-icon>close</v-icon>
           </v-btn>
         </v-toolbar>
@@ -46,6 +48,7 @@
               width="100%"
               height="100%"
               @ready="readyVideo"
+              @playing="playingVideo"
             />
           </v-responsive>
           <v-card-title>
@@ -77,8 +80,7 @@
                 depressed
                 class="small-button"
               >
-                <v-icon
-                  small>
+                <v-icon small>
                   file_copy
                 </v-icon>
               </v-btn>
@@ -91,31 +93,27 @@
                 class="small-button"
                 @click="openVideoInNewTab"
               >
-                <v-icon
-                  small>
+                <v-icon small>
                   movie
                 </v-icon>
               </v-btn>
               <span>YouTubeで開く</span>
             </v-tooltip>
-            <v-tooltip
-              top>
+            <v-tooltip top>
               <v-btn
                 slot="activator"
                 :to="`/video/${videoId}?start=${start}&end=${end}`"
                 class="small-button"
                 depressed
               >
-                <v-icon
-                  small>
+                <v-icon small>
                   open_in_new
                 </v-icon>
               </v-btn>
               <span>動画ページを開く</span>
             </v-tooltip>
           </v-card-actions>
-          <div
-            class="subscribe">
+          <div class="subscribe">
             <script src="https://apis.google.com/js/platform.js" />
             <div
               :data-channelid="channelId"
@@ -146,6 +144,8 @@ import axios from "axios"
 
 Vue.use(VueYoutube)
 Vue.use(VueClipboard)
+
+const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
 
 export default {
   props: {
@@ -179,26 +179,24 @@ export default {
       isLoop: true,
       player_vars: { start: Math.floor(this.start), rel: 0 },
       youTubeUrl: `https://youtu.be/${this.videoId}?start=${Math.floor(this.start)}&end=${Math.ceil(this.end)}`,
-      shareUrl: `${location.protocol}//${location.host}/video/${this.videoId}?start=${this.start}&end=${this.end}`
+      shareUrl: `${location.protocol}//${location.host}/video/${this.videoId}?start=${this.start}&end=${this.end}`,
+      playCount: 0,
+      isFirstPlay: true
     };
   },
   watch: {
-    dialog(value) {
+    async dialog(value) {
       if (value) {
         this.render = !this.render;
       } else {
         //youtubeのフレームをDOMから削除する
         this.$refs.youtube.player.destroy();
+
+        if (this.playCount > 0) {
+          await axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: this.playCount }] });
+        }
       }
     },
-    async isLoop(value) {
-      const currentTime = await this.$refs.youtube.player.getCurrentTime();
-      if (value &&
-        (currentTime <= this.start ||
-          this.end <= currentTime)) {
-        this.$refs.youtube.player.seekTo(this.start, true);
-      }
-    }
   },
   methods: {
     readyVideo() {
@@ -211,12 +209,14 @@ export default {
 
         if (this.isLoop) {
           const currentTime = await this.$refs.youtube.player.getCurrentTime();
-          if (currentTime > this.end) {
+          if (currentTime < this.start || this.end < currentTime) {
             this.$refs.youtube.player.seekTo(this.start, true);
+            await this.sendPlayCount();
+            await sleep(Math.max((this.end - this.start) * 1000 - 100, 0));
           }
         }
 
-        setTimeout(loop.bind(this), 50);
+        setTimeout(loop.bind(this), 30);
       };
       loop.bind(this)();
     },
@@ -246,8 +246,17 @@ export default {
     openVideoInNewTab() {
       window.open(this.youTubeUrl);
       this.$refs.youtube.player.pauseVideo();
+    },
+    async playingVideo() {
+      if (this.isFirstPlay) {
+        await this.sendPlayCount();
+        this.isFirstPlay = false;
+      }
+    },
+    async sendPlayCount() {
+      await axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: 1 }] });
     }
-  }
+  },
 };
 </script>
 

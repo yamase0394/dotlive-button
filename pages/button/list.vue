@@ -2,7 +2,8 @@
   <v-layout
     class="voice-root"
     align-center
-    column >
+    column
+  >
     <v-flex>
       <v-select
         v-model="filter.channel"
@@ -16,7 +17,8 @@
         fluid
         px-5
         pt-0
-        grid-list-md >
+        grid-list-md
+      >
         <v-layout
           row
           wrap
@@ -27,7 +29,7 @@
           >
             <voice-card
               :start="Number(item[0])"
-              :end="Number(item[1]) + Number(item[0])"
+              :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
               :text="(item[2])"
               :video-id="item[4]"
               :avater-url="channelIdToThumb[item[3]]"

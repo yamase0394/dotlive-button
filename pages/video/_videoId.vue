@@ -10,24 +10,26 @@
     <v-container
       grid-list-md
       fluid
-      class="video-id-root">
-      <v-layout
-        row>
+      class="video-id-root"
+    >
+      <v-layout row>
         <v-flex
           class="video-layout"
-          xs7>
+          xs7
+        >
           <v-layout
             row
-            wrap>
+            wrap
+          >
             <v-flex>
-              <v-btn-toggle
-                v-model="repeats">
+              <v-btn-toggle v-model="repeats">
                 <v-tooltip bottom>
                   <v-btn
                     slot="activator"
                     :value="true"
                     class="toggele__btn"
-                    flat>
+                    flat
+                  >
                     <v-icon>loop</v-icon>
                   </v-btn>
                   <span>指定範囲をリピート再生する</span>
@@ -35,8 +37,7 @@
               </v-btn-toggle>
             </v-flex>
             <v-flex xs12>
-              <v-responsive
-                :aspect-ratio="16/9">
+              <v-responsive :aspect-ratio="16/9">
                 <youtube
                   ref="youtube"
                   :video-id="videoId"
@@ -52,31 +53,36 @@
             </v-flex>
             <v-layout
               xs12
-              column>
+              column
+            >
               <v-flex
                 class="video-info-container"
-                xs12>
+                xs12
+              >
                 <div class="grey--text">{{ new Date(publishedAt).toLocaleString() }}</div>
                 <div
                   class="video-title"
-                  v-html="videoTitle"/>
-                <v-divider/>
+                  v-html="videoTitle"
+                />
+                <v-divider />
                 <div :style="{marginTop:'5px'}">
                   <span class="grey--text"> 内容 </span><br>
                   <span
                     :style="{marginLeft:'5px'}"
-                    v-html="selectedText"/> <br>
+                    v-html="selectedText"
+                  /> <br>
                 </div>
               </v-flex>
               <v-flex
                 :style="{marginTop:'3px', maxHeight:'14px'}"
-                class="no-padding grey--text">URL
+                class="no-padding grey--text"
+              >URL
               </v-flex>
-              <v-layout
-                align-center>
+              <v-layout align-center>
                 <v-flex
                   class="no-padding"
-                  xs9>
+                  xs9
+                >
                   <v-text-field
                     :value="shareUrl"
                     class="clipboard"
@@ -93,9 +99,9 @@
                       v-clipboard:error="onCopyError"
                       slot="activator"
                       class="small-button"
-                      depressed>
-                      <v-icon
-                        small>
+                      depressed
+                    >
+                      <v-icon small>
                         file_copy
                       </v-icon>
                     </v-btn>
@@ -108,9 +114,9 @@
                       slot="activator"
                       class="small-button"
                       depressed
-                      @click="openVideoInNewTab">
-                      <v-icon
-                        small>
+                      @click="openVideoInNewTab"
+                    >
+                      <v-icon small>
                         movie
                       </v-icon>
                     </v-btn>
@@ -124,16 +130,17 @@
                 </div>
                 <div
                   :class="['video-description', expandDescriptionBtnText == 'もっと見る' ?'video-description-hidden':'']"
-                  v-html="videoDescription"/>
+                  v-html="videoDescription"
+                />
                 <v-btn
                   v-if="videoDescription.split(/\r\n|\r|\n/).length > 3"
                   class="expand-description-btn transparent"
                   flat
-                  @click="onExpandDescriptionClicked">
+                  @click="onExpandDescriptionClicked"
+                >
                   {{ expandDescriptionBtnText }}
                 </v-btn>
-                <div
-                  class="subscribe-btn">
+                <div class="subscribe-btn">
                   <script src="https://apis.google.com/js/platform.js" />
                   <div
                     :data-channelid="channelId"
@@ -179,7 +186,7 @@
                     :key="item[5]">
                     <simple-voice-card
                       :start="Number(item[0])"
-                      :end="Number(item[1]) + Number(item[0])"
+                      :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
                       :text="item[2]"
                       :id="item[5]"
                       :selected-id="selectedId"
@@ -206,6 +213,8 @@ import VueClipboard from 'vue-clipboard2'
 Vue.use(VueYoutube)
 Vue.use(VueClipboard)
 
+const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
+
 export default {
   components: {
     SimpleVoiceCard
@@ -225,26 +234,30 @@ export default {
       videoDescription: "",
       filterText: "",
       filteredSubtitles: [],
-      isPlayed: false,
+      hasPlayed: false,
       selectedId: "",
-      selectedText: "未選択",
+      selectedText: "",
       expandDescriptionBtnText: "もっと見る",
       videoUrl: "",
       snackbar: false,
       snackbarText: "",
-      shareUrl: ""
+      shareUrl: "",
     }
   },
   async asyncData({ params, query, error }) {
-    const resSub = await axios.post("/api/subtitle", { id: params.videoId, type: "video" });
     let selectedText = "未選択";
     let selectedId = "";
-    resSub.data.items.forEach(element => {
-      if (query.start == Number(element[0]) && query.end == Number(element[1]) + Number(element[0])) {
+    const start = Number(query.start);
+    const end = Number(query.end);
+
+    const resSub = await axios.post("/api/subtitle", { id: params.videoId, type: "video" });
+    for (const element of resSub.data.items) {
+      if (start == Number(element[0]) && end == (Number(element[1]) * 1000 + Number(element[0]) * 1000) / 1000) {
         selectedText = element[2];
         selectedId = element[5];
+        break;
       }
-    });
+    }
 
     const resVideo = await axios.post("/api/video", {
       id: params.videoId,
@@ -260,23 +273,31 @@ export default {
       }
     }
 
-    let start = parseFloat(query.start);
-    let end = parseFloat(query.end);
     let videoUrl;
+    const videoId = resVideo.data.items[1];
+    console.log(start);
     if (isNaN(start)) {
-      videoUrl = `https://youtu.be/${resVideo.data.items[1]}`;
+      videoUrl = `https://youtu.be/${videoId}`;
     } else {
       if (isNaN(end)) {
-        videoUrl = `https://youtu.be/${resVideo.data.items[1]}?start=${Math.floor(start)}`;
+        videoUrl = `https://youtu.be/${videoId}?start=${Math.floor(start)}`;
       } else {
-        videoUrl = `https://youtu.be/${resVideo.data.items[1]}?start=${Math.floor(start)}&end=${Math.ceil(end)}`;
+        videoUrl = `https://youtu.be/${videoId}?start=${Math.floor(start)}&end=${Math.ceil(end)}`;
       }
     }
+
+    let shareUrl;
+    if (isNaN(start) || isNan(end)) {
+      shareUrl = `${location.protocol}//${location.host}/video/${videoId}`
+    } else {
+      shareUrl = `${location.protocol}//${location.host}/video/${videoId}?start=${start}&end=${end}`
+    }
+
     return {
       subtitles: resSub.data.items,
       channelIdToThumb: channelIdToThumb,
       channelId: resVideo.data.items[0],
-      videoId: resVideo.data.items[1],
+      videoId: videoId,
       publishedAt: resVideo.data.items[2],
       videoTitle: resVideo.data.items[3],
       videoDescription: resVideo.data.items[4],
@@ -284,16 +305,16 @@ export default {
       start: start,
       end: end,
       videoUrl: videoUrl,
-      shareUrl: `${location.protocol}//${location.host}/video/${resVideo.data.items[1]}?start=${start}&end=${end}`,
+      shareUrl: shareUrl,
       selectedText: selectedText,
-      selectedId: selectedId
+      selectedId: selectedId,
     };
   },
   mounted() {
     this.$refs.scrollableSubLayout.addEventListener("wheel", this.onScroll);
     this.repeat();
   },
-  beforeDestroy() {
+  async beforeDestroy() {
     this.$refs.scrollableSubLayout.removeEventListener("wheel", this.onScroll);
   },
   destroyed() {
@@ -312,27 +333,33 @@ export default {
         event.preventDefault()
       }
     },
-    onVoiceBtnClicked(id, start, end, text) {
+    async onVoiceBtnClicked(id, start, end, text) {
       this.$router.replace(`/video/${this.videoId}?start=${start}&end=${end}`);
       this.$refs.youtube.player.seekTo(start, true);
       this.selectedId = id;
       this.start = start;
       this.end = end;
       this.selectedText = text;
-      this.videoUrl = `https://youtu.be/${this.videoId}?start=${Math.floor(start)}&end=${Math.ceil(end)}`
+      this.videoUrl = `https://youtu.be/${this.videoId}?start=${Math.floor(start)}&end=${Math.ceil(end)}`;
+      this.shareUrl = `${location.protocol}//${location.host}/video/${this.videoId}?start=${start}&end=${end}`;
+
+      await this.sendPlayCount();
     },
     repeat() {
       async function loop() {
-        if (this.isPlayed && this.repeats && this.start != null && this.end != null) {
+        if (this.hasPlayed && this.repeats && this.start != null && this.end != null) {
           const currentTime = await this.$refs.youtube.player.getCurrentTime();
           if (currentTime < this.start || this.end < currentTime) {
             this.$refs.youtube.player.seekTo(this.start, true);
             this.$refs.youtube.player.playVideo();
+
+            await this.sendPlayCount();
+            await sleep(Math.max((this.end - this.start) * 1000 - 100, 0));
           }
         }
 
         if (!this.destroyed) {
-          setTimeout(loop.bind(this), 50);
+          setTimeout(loop.bind(this), 30);
         }
       };
       loop.bind(this)();
@@ -344,11 +371,12 @@ export default {
       }
 
       this.filteredSubtitles = this.subtitles.filter(e => e[2].includes(this.filterText));
-
     },
-    playing() {
-      console.log(`playing:${this.isPlayed}`);
-      this.isPlayed = true;
+    async playing() {
+      if (!this.hasPlayed) {
+        await this.sendPlayCount();
+        this.hasPlayed = true;
+      }
     },
     onExpandDescriptionClicked() {
       switch (this.expandDescriptionBtnText) {
@@ -371,6 +399,11 @@ export default {
     openVideoInNewTab() {
       window.open(this.videoUrl);
       this.$refs.youtube.player.pauseVideo();
+    },
+    async sendPlayCount() {
+      if (this.selectedId) {
+        await axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.selectedText, videoId: this.videoId, count: 1 }] });
+      }
     }
   },
 }
