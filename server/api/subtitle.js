@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 
 const ITEM_PER_PAGE = 100;
-const RANDOM_ITEM_COUNT = 100;
+const RANDOM_ITEM_COUNT = 120;
 
 const db = require(`${process.cwd()}/server/db/db`);
 
