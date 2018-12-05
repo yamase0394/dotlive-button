@@ -54,10 +54,10 @@
           <v-card-title>
             <div>
               <span class="grey--text">{{ publishedAt }}</span><br>
-              <span>{{ title }}</span><br>
+              <span v-html="title" /><br>
               <div :style="{marginTop:'3px'}">
                 <span class="grey--text"> 内容 </span><br>
-                <span>{{ text }}</span><br>
+                <span v-html="text" /><br>
                 <div :style="{marginTop:'3px'}">
                   <span class="grey--text"> URL </span><br>
                 </div>
@@ -141,10 +141,12 @@ import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
 import VueClipboard from 'vue-clipboard2'
 import axios from "axios"
+import AsyncLock from "async-lock";
 
 Vue.use(VueYoutube)
 Vue.use(VueClipboard)
 
+const lock = new AsyncLock();
 const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
 
 export default {
@@ -209,10 +211,9 @@ export default {
 
         if (this.isLoop) {
           const currentTime = await this.$refs.youtube.player.getCurrentTime();
-          if (currentTime < this.start || this.end < currentTime) {
+          if (!this.isFirstPlay && (currentTime < this.start || this.end < currentTime)) {
             this.$refs.youtube.player.seekTo(this.start, true);
             await this.sendPlayCount();
-            await sleep(Math.max((this.end - this.start) * 1000 - 100, 0));
           }
         }
 
@@ -254,7 +255,12 @@ export default {
       }
     },
     async sendPlayCount() {
-      await axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: 1 }] });
+      if (!lock.isBusy(`${this.start}${this.end}${this.selectedText}`)) {
+        await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
+          axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: 1 }] });
+          await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
+        });
+      }
     }
   },
 };

@@ -209,10 +209,12 @@ import axios from "axios"
 import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
 import VueClipboard from 'vue-clipboard2'
+import AsyncLock from "async-lock";
 
 Vue.use(VueYoutube)
 Vue.use(VueClipboard)
 
+const lock = new AsyncLock();
 const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
 
 export default {
@@ -287,7 +289,7 @@ export default {
     }
 
     let shareUrl;
-    if (isNaN(start) || isNan(end)) {
+    if (isNaN(start) || isNaN(end)) {
       shareUrl = `${location.protocol}//${location.host}/video/${videoId}`
     } else {
       shareUrl = `${location.protocol}//${location.host}/video/${videoId}?start=${start}&end=${end}`
@@ -354,7 +356,6 @@ export default {
             this.$refs.youtube.player.playVideo();
 
             await this.sendPlayCount();
-            await sleep(Math.max((this.end - this.start) * 1000 - 100, 0));
           }
         }
 
@@ -401,8 +402,11 @@ export default {
       this.$refs.youtube.player.pauseVideo();
     },
     async sendPlayCount() {
-      if (this.selectedId) {
-        await axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.selectedText, videoId: this.videoId, count: 1 }] });
+      if (this.selectedId && !lock.isBusy(`${this.start}${this.end}${this.selectedText}`)) {
+        await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
+          axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.selectedText, videoId: this.videoId, count: 1 }] });
+          await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
+        });
       }
     }
   },
