@@ -52,7 +52,7 @@
       <v-card>
         <v-card-text>この動画の字幕はYouTubeでも編集できます</v-card-text>
         <v-card-actions>
-          <v-spacer/>
+          <v-spacer />
           <v-btn
             flat="flat"
             @click="notifycanEditAtYoutubeDialog = false"
@@ -67,7 +67,7 @@
       <v-card>
         <v-card-text>{{ confirmDialogText }}</v-card-text>
         <v-card-actions>
-          <v-spacer/>
+          <v-spacer />
           <v-btn
             color="red darken-1"
             flat
@@ -106,7 +106,7 @@
           <span>ページを離れても編集が保存されます</span>
         </v-tooltip>
       </v-toolbar-items>
-      <v-spacer/>
+      <v-spacer />
       <v-toolbar-items>
         <v-btn
           flat
@@ -272,48 +272,28 @@
                       md3
                       xs6
                     >
-                      <v-btn
-                        @click="() => {
-                          selectedStart = selectedStart - 1;
-                          formatStartTime(selectedStart);
-                        }"
-                      >-1</v-btn>
+                      <v-btn @click="changeSelectedStart(-1)">-1</v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn
-                        @click="() => {
-                          selectedStart = (selectedStart * 10 - 1) / 10;
-                          formatStartTime(selectedStart);
-                        }"
-                      >-0.1</v-btn>
+                      <v-btn @click="changeSelectedStart(-0.1)">-0.1</v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn
-                        @click="() => {
-                          selectedStart = (selectedStart * 10 + 1) / 10;
-                          formatStartTime(selectedStart);
-                        }"
-                      >+0.1</v-btn>
+                      <v-btn @click="changeSelectedStart(0.1)">+0.1</v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn
-                        @click="() => {
-                          selectedStart = selectedStart + 1;
-                          formatStartTime(selectedStart);
-                        }"
-                      >+1</v-btn>
+                      <v-btn @click="changeSelectedStart(1)">+1</v-btn>
                     </v-flex>
                   </v-layout>
                 </v-flex>
@@ -346,48 +326,28 @@
                       md3
                       xs6
                     >
-                      <v-btn
-                        @click="() => {
-                          selectedEnd = selectedEnd -1;
-                          formatEndTime(selectedEnd);
-                        }"
-                      >-1</v-btn>
+                      <v-btn @click="changeSelectedEnd(-1)">-1</v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn
-                        @click="() => {
-                          selectedEnd = (selectedEnd * 10 - 1) / 10;
-                          formatEndTime(selectedEnd);
-                        }"
-                      >-0.1</v-btn>
+                      <v-btn @click="changeSelectedEnd(-0.1)">-0.1</v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn
-                        @click="() => {
-                          selectedEnd = (selectedEnd * 10 + 1) / 10;
-                          formatEndTime(selectedEnd);
-                        }"
-                      >+0.1</v-btn>
+                      <v-btn @click="changeSelectedEnd(0.1)">+0.1</v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn
-                        @click="() => {
-                          selectedEnd = selectedEnd + 1;
-                          formatEndTime(selectedEnd);
-                        }"
-                      >+1</v-btn>
+                      <v-btn @click="changeSelectedEnd(1)">+1</v-btn>
                     </v-flex>
                   </v-layout>
                 </v-flex>
@@ -721,6 +681,7 @@ export default {
       });
     },
     sortAndCheckOrder() {
+      console.log("sortAndCheckOrder");
       this.errorSnackbar = false;
 
       this.subtitleList.sort((a, b) => {
@@ -750,7 +711,7 @@ export default {
         const target = this.subtitleList[i];
         const oneBefore = this.subtitleList[i - 1];
 
-        if (i > 1 && oneBefore.end > target.start) {
+        if (i > 0 && oneBefore.end > target.start) {
           target.hasError = true;
           try {
             this.$refs[target.id].error(true);
@@ -952,6 +913,14 @@ export default {
       this.selectedEnd = 0;
       this.selectedSubtitle = "";
       localStorage.removeItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId);
+    },
+    changeSelectedStart(diff) {
+      this.selectedStart = (this.selectedStart * 10 + diff * 10) / 10;
+      this.formatStartTime(this.selectedStart);
+    },
+    changeSelectedEnd(diff) {
+      this.selectedEnd = (this.selectedEnd * 10 + diff * 10) / 10;
+      this.formatEndTime(this.selectedEnd);
     }
   }
 }
@@ -977,11 +946,8 @@ export default {
 .flex-grow-0 {
   flex-grow: 0;
 }
-.edit-caption-container {
-
-}
 .edit-caption-container.v-input--selection-controls .v-input__control {
-  flex-grow: 1
+  flex-grow: 1;
 }
 .padding-0 {
   padding: 0;
