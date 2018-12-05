@@ -3,8 +3,9 @@
     v-scroll="onScroll"
     grid-list-md
     fluid
-    class="video-list-container">
-    <caption-status-filter-help-dialog ref="captionFilterHelpDialog"/>
+    class="video-list-container"
+  >
+    <caption-status-filter-help-dialog ref="captionFilterHelpDialog" />
     <v-fab-transition>
       <v-btn
         v-show="scrollToTopFab"
@@ -14,13 +15,15 @@
         fixed
         bottom
         right
-        @click="scrollToTop">
+        @click="scrollToTop"
+      >
         <v-icon>keyboard_arrow_up</v-icon>
       </v-btn>
     </v-fab-transition>
     <v-layout
       align-center
-      column>
+      column
+    >
       <v-flex>
         <p class="grey--text">
           検索結果 : {{ resultCount }}件
@@ -28,7 +31,8 @@
       </v-flex>
       <v-layout
         align-center
-        row>
+        row
+      >
         <v-flex>
           <v-select
             v-model="filter.channel"
@@ -50,7 +54,8 @@
         <v-btn
           icon
           small
-          @click="openCaptionFilterHelpDialog">
+          @click="openCaptionFilterHelpDialog"
+        >
           <v-icon>help_outline</v-icon>
         </v-btn>
       </v-layout>
@@ -70,10 +75,12 @@
     </v-layout>
     <infinite-loading
       ref="infiniteLoading"
+      :identifier="infiniteId"
       spinner="spiral"
-      @infinite="infiniteHandler">
-      <span slot="no-results"/>
-      <span slot="no-more"/>
+      @infinite="infiniteHandler"
+    >
+      <span slot="no-results" />
+      <span slot="no-more" />
     </infinite-loading>
   </v-container>
 </template>
@@ -111,7 +118,8 @@ export default {
       captionStatusToFilterItems: null,
       captionFilterItemToStatus: null,
       resultCount: 0,
-      scrollToTopFab: false
+      scrollToTopFab: false,
+      infiniteId: 0
     }
   },
   async asyncData({ params, query, error }) {
@@ -265,7 +273,7 @@ export default {
         temp = temp.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
       }
 
-      this.$refs.infiniteLoading.$emit("$InfiniteLoading:reset");
+      this.infiniteId++;
       this.filteredItems = temp;
       this.resultCount = this.filteredItems.length;
       this.displayItems = this.filteredItems.slice(0, Math.min(ITEM_PER_PAGE, this.filteredItems.length));
@@ -289,7 +297,7 @@ export default {
         this.$router.push({ query: { keyword: this.$route.query.keyword, channel: this.channelNameToId[value], caption: this.$route.query.caption } });
       }
 
-      this.$refs.infiniteLoading.$emit("$InfiniteLoading:reset");
+      this.infiniteId++;
     },
     onCaptionFilterChanged(val) {
       if (this.$route.query.caption !== this.captionFilterItemToStatus[val]) {
@@ -297,7 +305,7 @@ export default {
         this.$router.push({ query: { keyword: this.$route.query.keyword, channel: this.$route.query.channel, caption: this.captionFilterItemToStatus[val] } });
       }
 
-      this.$refs.infiniteLoading.$emit("$InfiniteLoading:reset");
+      this.infiniteId++;
     },
     infiniteHandler($state) {
       if (this.filteredItems.length === this.displayItems.length) {

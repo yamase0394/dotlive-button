@@ -63,6 +63,7 @@
     </v-layout>
     <infinite-loading
       ref="infiniteLoading"
+      :identifier="infiniteId"
       spinner="spiral"
       @infinite="infiniteHandler">
       <span slot="no-results"/>
@@ -103,6 +104,7 @@ export default {
       captionStatusToFilterItems: null,
       captionFilterItemToStatus: null,
       scrollToTopFab: false,
+      infiniteId:0
     }
   },
   async asyncData({ query }) {
@@ -232,7 +234,7 @@ export default {
         this.filteredItems = this.filteredItems.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
       }
 
-      this.$refs.infiniteLoading.$emit("$InfiniteLoading:reset");
+      this.infiniteId++;
       this.displayItems = this.filteredItems.slice(0, Math.min(ITEM_PER_PAGE, this.filteredItems.length));
       sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(this.displayItems));
     }
@@ -254,7 +256,7 @@ export default {
         this.$router.push({ query: { channel: this.$route.query.channel, caption: this.captionFilterItemToStatus[val] } });
       }
 
-      this.$refs.infiniteLoading.$emit("$InfiniteLoading:reset");
+      this.infiniteId++;
     },
     infiniteHandler($state) {
       if (this.filteredItems.length === this.displayItems.length) {
