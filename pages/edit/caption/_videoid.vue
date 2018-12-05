@@ -1,24 +1,24 @@
 <template>
   <div>
     <v-snackbar
-      v-model="snackbar"
       :color="snackbarColor"
       :timeout="8000"
-      top>
+      v-model="snackbar"
+      top
+    >
       {{ snackbarText }}
       <v-btn
         dark
         flat
         @click="snackbar = false"
-      >
-        閉じる
-      </v-btn>
+      >閉じる</v-btn>
     </v-snackbar>
     <v-snackbar
-      v-model="errorSnackbar"
       :timeout="8000"
+      v-model="errorSnackbar"
       color="error"
-      top>
+      top
+    >
       {{ snackbarText }}
       <v-btn
         dark
@@ -27,9 +27,7 @@
           $refs.dynamicScroller.scrollToItem(errorIndex);
           errorSnackbar = false;
         }"
-      >
-        該当箇所に移動
-      </v-btn>
+      >該当箇所に移動</v-btn>
     </v-snackbar>
     <v-dialog
       v-model="progressDialog"
@@ -37,20 +35,20 @@
       width="300"
     >
       <v-card>
-        <v-card-text>
-          アップロード中
+        <v-card-text>アップロード中
           <v-progress-linear
-            indeterminate
-            color="white"
             class="mb-0"
+            color="white"
+            indeterminate
           />
         </v-card-text>
       </v-card>
     </v-dialog>
     <v-dialog
       v-model="notifycanEditAtYoutubeDialog"
+      max-width="290"
       persistent
-      max-width="290">
+    >
       <v-card>
         <v-card-text>この動画の字幕はYouTubeでも編集できます</v-card-text>
         <v-card-actions>
@@ -58,15 +56,14 @@
           <v-btn
             flat="flat"
             @click="notifycanEditAtYoutubeDialog = false"
-          >
-            閉じる
-          </v-btn>
+          >閉じる</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog
       v-model="confirmDialog"
-      max-width="290">
+      max-width="290"
+    >
       <v-card>
         <v-card-text>{{ confirmDialogText }}</v-card-text>
         <v-card-actions>
@@ -75,18 +72,14 @@
             color="red darken-1"
             flat
             @click="confirmDialog = false"
-          >
-            キャンセル
-          </v-btn>
+          >キャンセル</v-btn>
           <v-btn
             :color="confirmDialogAceeptButtonColor"
             @click="() => {
               confirmDialog = false;
               confirmDialogAcceptFunction()
             }"
-          >
-            {{ confirmDialogAcceptText }}
-          </v-btn>
+          >{{ confirmDialogAcceptText }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -94,171 +87,156 @@
       v-show="false"
       ref="pickFile"
       accept=".srt"
-      type="file"
       name="caption"
+      type="file"
       @change="onSubRipFilePicked"
     >
     <v-toolbar
       flat
-      height="38px">
+      height="38px"
+    >
       <v-toolbar-items>
         <v-tooltip bottom>
           <v-switch
             slot="activator"
             v-model="autoSave"
-            label="変更を自動保存"
             color="#1976d2"
+            label="変更を自動保存"
           />
-          <span> ページを離れても編集が保存されます</span>
+          <span>ページを離れても編集が保存されます</span>
         </v-tooltip>
       </v-toolbar-items>
       <v-spacer/>
       <v-toolbar-items>
         <v-btn
           flat
-          @click="showPickSubRipFileDialog">
-          <v-icon left>
-            insert_drive_file
-          </v-icon>
-          SubRipファイルを読み込む
+          @click="showPickSubRipFileDialog"
+        >
+          <v-icon left>insert_drive_file</v-icon>SubRipファイルを読み込む
         </v-btn>
         <v-btn
           flat
-          @click="downloadSubRip">
-          <v-icon left>
-            get_app
-          </v-icon>
-          SubRipファイルを保存
+          @click="downloadSubRip"
+        >
+          <v-icon left>get_app</v-icon>SubRipファイルを保存
         </v-btn>
         <v-btn
           :loading="progressDialog"
           flat
-          @click="uploadButtonClicked">
-          <v-icon left>
-            cloud_upload
-          </v-icon>
-          字幕をアップロード
+          @click="uploadButtonClicked"
+        >
+          <v-icon left>cloud_upload</v-icon>字幕をアップロード
         </v-btn>
       </v-toolbar-items>
     </v-toolbar>
     <v-container fluid>
       <v-layout
         justify-space-around
-        row>
+        row
+      >
         <v-flex
           style="max-width:45vw"
-          xs7>
+          xs7
+        >
           <v-container
             class="padding-0"
-            grid-list-md>
-            <v-layout
-              column>
-              <v-flex
-                class="flex-grow-0">
+            grid-list-md
+          >
+            <v-layout column>
+              <v-flex class="flex-grow-0">
                 <v-responsive
+                  :aspect-ratio="16/9"
                   :key="videoId"
-                  :aspect-ratio="16/9">
+                >
                   <youtube
                     ref="youtube"
                     :video-id="videoId"
-                    width="100%"
                     height="100%"
-                    @playing="playingVideo"
-                    @ready="readyVideo"
+                    width="100%"
                     @error="videoError"
                     @paused="videoPaused"
+                    @playing="playingVideo"
+                    @ready="readyVideo"
                   />
                   <p class="subtitle__text">
                     <span
                       v-if="displaySubtitle"
-                      class="subtitle__background">
-                      {{ displaySubtitle }}
-                    </span>
+                      class="subtitle__background"
+                    >{{ displaySubtitle }}</span>
                   </p>
                 </v-responsive>
               </v-flex>
               <v-layout
-                wrap
                 justify-center
+                row
                 style="margin-top: 10px"
-                row>
+                wrap
+              >
                 <v-flex class="flex-grow-0">
                   <v-btn
-                    depressed
                     class="small-button"
+                    depressed
                     @click="replayVideo(5)"
                   >
-                    <v-icon>
-                      replay_5
-                    </v-icon>
+                    <v-icon>replay_5</v-icon>
                   </v-btn>
                 </v-flex>
                 <v-flex class="flex-grow-0">
                   <v-btn
-                    depressed
                     class="small-button"
+                    depressed
                     @click="replayVideo(1)"
                   >
-                    <v-icon left>
-                      chevron_left
-                    </v-icon>
-                    1秒
+                    <v-icon left>chevron_left</v-icon>1秒
                   </v-btn>
                 </v-flex>
                 <v-flex class="flex-grow-0">
                   <v-btn
-                    depressed
                     class="small-button"
+                    depressed
                     @click="onPlayButtonClicked"
                   >
-                    <v-icon>
-                      {{ playIcon }}
-                    </v-icon>
+                    <v-icon>{{ playIcon }}</v-icon>
                   </v-btn>
                 </v-flex>
                 <v-flex class="flex-grow-0">
                   <v-btn
-                    depressed
                     class="small-button"
+                    depressed
                     @click="forwardVideo(1)"
-                  >
-                    1秒
-                    <v-icon right>
-                      chevron_right
-                    </v-icon>
+                  >1秒
+                    <v-icon right>chevron_right</v-icon>
                   </v-btn>
                 </v-flex>
                 <v-flex class="flex-grow-0">
                   <v-btn
-                    depressed
                     class="small-button"
+                    depressed
                     @click="forwardVideo(5)"
                   >
-                    <v-icon>
-                      forward_5
-                    </v-icon>
+                    <v-icon>forward_5</v-icon>
                   </v-btn>
                 </v-flex>
               </v-layout>
               <v-layout
                 v-if="selectedId !== -1"
-                wrap
                 align-center
-                row>
+                row
+                wrap
+              >
                 <v-flex
-                  xs12
+                  class="flex-grow-0"
                   md6
-                  class="flex-grow-0">
+                  xs12
+                >
                   <v-btn @click="playFromSelectedStart">
-                    <v-icon left>
-                      play_arrow
-                    </v-icon>
-                    編集中の開始時間から再生
+                    <v-icon left>play_arrow</v-icon>編集中の開始時間から再生
                   </v-btn>
                 </v-flex>
                 <v-flex
                   md6
-                  xs12>
+                  xs12
+                >
                   <v-switch
                     v-model="loop"
                     color="#1976d2"
@@ -266,182 +244,185 @@
                   />
                 </v-flex>
                 <v-flex
-                  xs6
+                  class="flex-grow-0"
                   md3
-                  class="flex-grow-0">
-                  <v-btn @click="setCurrentTimeToStart">
-                    現在の再生時間
-                  </v-btn>
+                  xs6
+                >
+                  <v-btn @click="setCurrentTimeToStart">現在の再生時間</v-btn>
                 </v-flex>
                 <v-flex
-                  xs6
+                  class="flex-grow-0"
                   md3
-                  class="flex-grow-0">
+                  xs6
+                >
                   <v-text-field
                     :value="selectedStart"
-                    type="number"
                     label="開始時間（秒）"
-                    @input="formatStartTime"/>
+                    type="number"
+                    @input="formatStartTime"
+                  />
                 </v-flex>
                 <v-flex
+                  md5
                   xs12
-                  md5>
-                  <v-layout
-                    wrap>
+                >
+                  <v-layout wrap>
                     <v-flex
-                      xs6
+                      class="flex-grow-0"
                       md3
-                      class="flex-grow-0">
+                      xs6
+                    >
                       <v-btn
                         @click="() => {
                           selectedStart = selectedStart - 1;
                           formatStartTime(selectedStart);
-                      }">
-                        -1
-                      </v-btn>
+                        }"
+                      >-1</v-btn>
                     </v-flex>
                     <v-flex
-                      xs6
+                      class="flex-grow-0"
                       md3
-                      class="flex-grow-0">
+                      xs6
+                    >
                       <v-btn
                         @click="() => {
                           selectedStart = (selectedStart * 10 - 1) / 10;
                           formatStartTime(selectedStart);
-                      }">
-                        -0.1
-                      </v-btn>
+                        }"
+                      >-0.1</v-btn>
                     </v-flex>
                     <v-flex
-                      xs6
+                      class="flex-grow-0"
                       md3
-                      class="flex-grow-0">
+                      xs6
+                    >
                       <v-btn
                         @click="() => {
                           selectedStart = (selectedStart * 10 + 1) / 10;
                           formatStartTime(selectedStart);
-                      }">
-                        +0.1
-                      </v-btn>
+                        }"
+                      >+0.1</v-btn>
                     </v-flex>
                     <v-flex
-                      xs6
+                      class="flex-grow-0"
                       md3
-                      class="flex-grow-0">
+                      xs6
+                    >
                       <v-btn
                         @click="() => {
                           selectedStart = selectedStart + 1;
                           formatStartTime(selectedStart);
-                      }">
-                        +1
-                      </v-btn>
+                        }"
+                      >+1</v-btn>
                     </v-flex>
                   </v-layout>
                 </v-flex>
                 <v-flex
-                  xs6
+                  class="flex-grow-0"
                   md3
-                  class="flex-grow-0">
-                  <v-btn @click="setCurrentTimeToEnd">
-                    現在の再生時間
-                  </v-btn>
+                  xs6
+                >
+                  <v-btn @click="setCurrentTimeToEnd">現在の再生時間</v-btn>
                 </v-flex>
                 <v-flex
-                  xs6
+                  class="flex-grow-0"
                   md3
-                  class="flex-grow-0">
+                  xs6
+                >
                   <v-text-field
                     :value="selectedEnd"
-                    type="number"
                     label="終了時間（秒）"
-                    @input="formatEndTime"/>
+                    type="number"
+                    @input="formatEndTime"
+                  />
                 </v-flex>
                 <v-flex
+                  md5
                   xs12
-                  md5>
+                >
                   <v-layout wrap>
                     <v-flex
-                      xs6
+                      class="flex-grow-0"
                       md3
-                      class="flex-grow-0">
+                      xs6
+                    >
                       <v-btn
                         @click="() => {
                           selectedEnd = selectedEnd -1;
                           formatEndTime(selectedEnd);
-                      }">
-                        -1
-                      </v-btn>
+                        }"
+                      >-1</v-btn>
                     </v-flex>
                     <v-flex
-                      xs6
+                      class="flex-grow-0"
                       md3
-                      class="flex-grow-0">
+                      xs6
+                    >
                       <v-btn
                         @click="() => {
                           selectedEnd = (selectedEnd * 10 - 1) / 10;
                           formatEndTime(selectedEnd);
-                      }">
-                        -0.1
-                      </v-btn>
+                        }"
+                      >-0.1</v-btn>
                     </v-flex>
                     <v-flex
-                      xs6
+                      class="flex-grow-0"
                       md3
-                      class="flex-grow-0">
+                      xs6
+                    >
                       <v-btn
                         @click="() => {
                           selectedEnd = (selectedEnd * 10 + 1) / 10;
                           formatEndTime(selectedEnd);
-                      }">
-                        +0.1
-                      </v-btn>
+                        }"
+                      >+0.1</v-btn>
                     </v-flex>
                     <v-flex
-                      xs6
+                      class="flex-grow-0"
                       md3
-                      class="flex-grow-0">
+                      xs6
+                    >
                       <v-btn
                         @click="() => {
                           selectedEnd = selectedEnd + 1;
                           formatEndTime(selectedEnd);
-                      }">
-                        +1
-                      </v-btn>
+                        }"
+                      >+1</v-btn>
                     </v-flex>
                   </v-layout>
                 </v-flex>
                 <v-flex
+                  class="flex-grow-0"
                   xs12
-                  class="flex-grow-0">
+                >
                   <v-textarea
                     v-model="selectedSubtitle"
+                    auto-grow
                     flat
                     label="字幕"
-                    auto-grow
-                    rows="2"/>
+                    rows="2"
+                  />
                 </v-flex>
               </v-layout>
             </v-layout>
           </v-container>
         </v-flex>
-        <v-flex
-          xs5>
+        <v-flex xs5>
           <v-container
             class="padding-0 subtitle-container"
-            grid-list-sm>
+            grid-list-sm
+          >
             <v-layout
               justify-space-between
-              row>
-              <v-btn
-                @click="addSubtitleCard">
-                <v-icon left>
-                  add_comment
-                </v-icon>
-                字幕を追加
+              row
+            >
+              <v-btn @click="addSubtitleCard">
+                <v-icon left>add_comment</v-icon>字幕を追加
               </v-btn>
               <v-menu
                 bottom
-                left>
+                left
+              >
                 <v-btn
                   slot="activator"
                   dark
@@ -456,36 +437,43 @@
                 </v-list>
               </v-menu>
             </v-layout>
-            <v-radio-group v-model="selectedId">
+            <v-radio-group
+              v-model="selectedId"
+              class="edit-caption-container"
+            >
               <v-layout
+                class="subtitle-container"
                 column
-                class="subtitle-container">
+              >
                 <dynamic-scroller
                   ref="dynamicScroller"
-                  :key="selectedSubtitleVer"
                   :items="subtitleList"
+                  :key="selectedSubtitleVer"
                   :min-item-height="86"
                   style="height:100%"
                 >
                   <template slot-scope="{ item, index, active }">
                     <dynamic-scroller-item
-                      :item="item"
                       :active="active"
-                      :size-dependencies="[item.text, item.height]">
+                      :item="item"
+                      :size-dependencies="[item.text, item.height]"
+                    >
                       <v-flex
                         v-resize="onSubtitleCardResized(item)"
                         ref="subtitleCardContainer"
-                        :key="item.id">
+                        :key="item.id"
+                      >
                         <subtitle-card
+                          :end="item.end"
+                          :id="item.id"
+                          :prop-has-error="item.hasError"
                           :ref="item.id"
                           :selected-id="selectedId"
-                          :id="item.id"
                           :start="item.start"
-                          :end="item.end"
                           :text="item.text"
-                          :prop-has-error="item.hasError"
+                          @subtitleCardCloseEvent="onSubtitleCardClosed"
                           @subtitleCardSelectedEvent="onSubtitleCardSelected"
-                          @subtitleCardCloseEvent="onSubtitleCardClosed"/>
+                        />
                       </v-flex>
                     </dynamic-scroller-item>
                   </template>
@@ -988,6 +976,12 @@ export default {
 }
 .flex-grow-0 {
   flex-grow: 0;
+}
+.edit-caption-container {
+
+}
+.edit-caption-container.v-input--selection-controls .v-input__control {
+  flex-grow: 1
 }
 .padding-0 {
   padding: 0;
