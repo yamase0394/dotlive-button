@@ -16,20 +16,31 @@ if (process.env.NODE_ENV === "development") {
 slackbot.controller = Botkit.slackbot({
   debug: false
 });
+
+const bot = slackbot.controller.spawn({ token: slackToken });
+
+function start_rtm() {
+  bot.startRTM(function(err, bot, payload) {
+    if (err) {
+      console.log("Failed to start RTM");
+      return setTimeout(start_rtm, 60000);
+    }
+    console.log("RTM started!");
+  });
+}
+
+slackbot.controller.on("rtm_close", function(bot, err) {
+  start_rtm();
+});
+
+start_rtm();
+
 slackbot.controller.hears("ping", "direct_mention", async function(
   bot,
   message
 ) {
   bot.reply(message, "pong");
 });
-
-const bot = slackbot.controller
-  .spawn({ token: slackToken })
-  .startRTM((err, bot, payload) => {
-    if (err) {
-      throw new Error(err);
-    }
-  });
 
 slackbot.say = text => {
   bot.say({
