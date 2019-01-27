@@ -62,6 +62,13 @@
             href="https://twitter.com/sla0394"
           >
             Twitter
+          </a>や
+          <a
+            class="blue--text"
+            target="_blank"
+            href="https://github.com/yamase0394/dotlive-button"
+          >
+            GitHub
           </a>
           にお願いします。
         </p>
