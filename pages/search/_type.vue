@@ -106,25 +106,21 @@ export default {
       }
     }
 
-    const channelIds = await $axios.$get("/api/channel/list").then(res => {
+    const channelInfos = await $axios.$get("/api/channel/list").then(res => {
       return res.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
     });
-
     const channelIdToThumb = {};
     const channelIdToName = {};
     const channelNameToId = {};
     const filter = { channel: "すべて" };
-    for (let channelId of channelIds) {
-      const res = await $axios.$get(`/api/channel/${channelId}`).catch(e => {
-        this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
-      });
-      channelIdToThumb[channelId] = res.url;
-      channelIdToName[channelId] = res.channelName;
-      channelNameToId[res.channelName] = channelId;
-      if (query.channel === channelId) {
-        filter.channel = res.channelName;
+    for (let e of channelInfos) {
+      channelIdToThumb[e.id] = e.url;
+      channelIdToName[e.id] = e.channelName;
+      channelNameToId[e.channelName] = e.id;
+      if (query.channel === e.id) {
+        filter.channel = e.channelName;
       }
     }
 

@@ -103,22 +103,18 @@ export default {
       });
     const subtitleIdSet = new Set(subtitles.map(e => e[SUBTITLE_SHEET_COLUMN_ID]));
 
-    const channelIds = await $axios.$get("/api/channel/list")
+    const channelInfos = await $axios.$get("/api/channel/list")
       .then(res => res.items)
       .catch(e => {
         this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
       });
-
     const channelIdToThumb = {};
     const channelIdToName = {};
     const channelNameToId = {}
-    for (let channelId of channelIds) {
-      const res = await $axios.$get(`/api/channel/${channelId}`).catch(e => {
-        this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
-      });
-      channelIdToThumb[channelId] = res.url;
-      channelIdToName[channelId] = res.channelName;
-      channelNameToId[res.channelName] = channelId;
+    for (const e of channelInfos) {
+      channelIdToThumb[e.id] = e.url;
+      channelIdToName[e.id] = e.channelName;
+      channelNameToId[e.channelName] = e.id;
     }
 
     return {
@@ -180,10 +176,10 @@ export default {
 
         const filteredSubtitles = newSubtitles.filter(e => !this.subtitleIdSet.has(e[SUBTITLE_SHEET_COLUMN_ID]));
         filteredSubtitles
-        .map(e => e[SUBTITLE_SHEET_COLUMN_ID])
-        .forEach(e => {
-          this.subtitleIdSet.add(e);
-        });
+          .map(e => e[SUBTITLE_SHEET_COLUMN_ID])
+          .forEach(e => {
+            this.subtitleIdSet.add(e);
+          });
         this.subtitles = this.subtitles.concat(filteredSubtitles);
         $state.loaded();
       }, 600);
