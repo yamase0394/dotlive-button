@@ -1,7 +1,7 @@
 {
   "name": "dotlive-button",
   "version": "1.0.0",
-  "description": "My flawless Nuxt.js project",
+  "description": ".LIVEに所属するメンバーの声を再生するWebアプリケーションです",
   "author": "s y",
   "private": true,
   "scripts": {
