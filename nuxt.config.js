@@ -48,7 +48,15 @@ module.exports = {
    */
   modules: [
     // Doc: https://github.com/nuxt-community/axios-module#usage
-    "@nuxtjs/axios",
+    [
+      "@nuxtjs/axios",
+      {
+        baseURL:
+          environment === "production"
+            ? "dotlivebutton.herokuapp.com"
+            : "http://localhost:3000"
+      }
+    ],
     ["@nuxtjs/dotenv", { only: ["aaa"] }],
     [
       "@nuxtjs/google-analytics",
