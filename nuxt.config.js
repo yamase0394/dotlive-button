@@ -53,7 +53,7 @@ module.exports = {
       {
         baseURL:
           environment === "production"
-            ? "dotlivebutton.herokuapp.com"
+            ? "https://dotlivebutton.herokuapp.com"
             : "http://localhost:3000"
       }
     ],
