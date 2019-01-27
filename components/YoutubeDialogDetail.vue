@@ -166,6 +166,10 @@ export default {
     text: {
       type: String,
       required: true
+    },
+    id: {
+      type: String,
+      required: true
     }
   },
   data() {
@@ -182,8 +186,8 @@ export default {
       player_vars: { start: Math.floor(this.start), rel: 0 },
       youTubeUrl: `https://youtu.be/${this.videoId}?start=${Math.floor(this.start)}&end=${Math.ceil(this.end)}`,
       shareUrl: `${location.protocol}//${location.host}/video/${this.videoId}?start=${this.start}&end=${this.end}`,
-      playCount: 0,
-      isFirstPlay: true
+      isFirstPlay: true,
+      isAsr: false
     };
   },
   watch: {
@@ -193,10 +197,6 @@ export default {
       } else {
         //youtubeのフレームをDOMから削除する
         this.$refs.youtube.player.destroy();
-
-        if (this.playCount > 0) {
-          await axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: this.playCount }] });
-        }
       }
     },
   },
@@ -231,6 +231,10 @@ export default {
           this.publishedAt = new Date(result.data.items[2]).toLocaleString();
           this.title = result.data.items[3];
           this.dialog = true;
+          this.isAsr = result.data.items[6];
+        }).catch(e => {
+          console.log(e);
+          window.open(this.youTubeUrl);
         });
     },
     close() {
@@ -255,12 +259,18 @@ export default {
       }
     },
     async sendPlayCount() {
-      if (!lock.isBusy(`${this.start}${this.end}${this.selectedText}`)) {
-        await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
-          axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: 1 }] });
-          await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
-        });
+      if (lock.isBusy(`${this.start}${this.end}${this.selectedText}`)) {
+        return;
       }
+
+      await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
+        if (this.isAsr) {
+          axios.post("/api/update/count/asr", { items: [{ count: 1, id: Number(this.id) }] });
+        } else {
+          axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: 1 }] });
+        }
+        await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
+      });
     }
   },
 };

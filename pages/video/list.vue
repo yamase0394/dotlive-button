@@ -3,8 +3,9 @@
     v-scroll="onScroll"
     grid-list-md
     fluid
-    class="video-list-container">
-    <caption-status-filter-help-dialog ref="captionFilterHelpDialog"/>
+    class="video-list-container"
+  >
+    <caption-status-filter-help-dialog ref="captionFilterHelpDialog" />
     <v-fab-transition>
       <v-btn
         v-show="scrollToTopFab"
@@ -14,13 +15,15 @@
         fixed
         bottom
         right
-        @click="scrollToTop">
+        @click="scrollToTop"
+      >
         <v-icon>keyboard_arrow_up</v-icon>
       </v-btn>
     </v-fab-transition>
     <v-layout
       align-center
-      column>
+      column
+    >
       <v-layout align-center>
         <v-flex>
           <v-select
@@ -43,7 +46,8 @@
         <v-btn
           icon
           small
-          @click="openCaptionFilterHelpDialog">
+          @click="openCaptionFilterHelpDialog"
+        >
           <v-icon>help_outline</v-icon>
         </v-btn>
       </v-layout>
@@ -65,9 +69,10 @@
       ref="infiniteLoading"
       :identifier="infiniteId"
       spinner="spiral"
-      @infinite="infiniteHandler">
-      <span slot="no-results"/>
-      <span slot="no-more"/>
+      @infinite="infiniteHandler"
+    >
+      <span slot="no-results" />
+      <span slot="no-more" />
     </infinite-loading>
   </v-container>
 </template>
@@ -84,6 +89,16 @@ const SESSION_STORAGE_CAPTION_FILTER = "videoListPreCaptionFilter";
 const SESSION_STORAGE_DISPLAY_ITEMS = "videoListPreDisplayItems";
 const SESSION_STORAGE_VIDEO_DATA_VERSION = "videoDataVersion";
 const SESSION_STORAGE_VIDEO_DATA = "videoData";
+
+const videoSheetColumn = {
+  CHANNEL_ID: 0,
+  VIDEO_ID: 1,
+  PUBLISHED_AT: 2,
+  TITLE: 3,
+  DESCRIPTION: 4,
+  THUM_URL: 5,
+  STATUS: 6
+};
 
 export default {
   components: {
@@ -104,7 +119,7 @@ export default {
       captionStatusToFilterItems: null,
       captionFilterItemToStatus: null,
       scrollToTopFab: false,
-      infiniteId:0
+      infiniteId: 0
     }
   },
   async asyncData({ query }) {
@@ -144,25 +159,22 @@ export default {
 
     if (channelIdToName[query.channel]) {
       filter.channel = channelIdToName[query.channel];
-      filteredItems = filteredItems.filter(e => e[0] === query.channel);
+      filteredItems = filteredItems.filter(e => e[videoSheetColumn.CHANNEL_ID] === query.channel);
     }
 
     const captionStatusToFilterItems = {
       "uploaded,dotlive_button": "あり",
-      "dotlive_button": "どっとライブボタン限定",
-      "can_upload": "アップロード可能",
+      "asr": "自動生成",
       "editable": "編集可",
       "not_permitted": "編集不可",
-      "waiting_ack": "審査待ち",
-      "checking": "確認中"
     };
     if (captionStatusToFilterItems[query.caption]) {
       filter.caption = captionStatusToFilterItems[query.caption];
       const split = query.caption.split(",");
-      filteredItems = filteredItems.filter(e => split.some(cond => cond === e[6]));
+      filteredItems = filteredItems.filter(e => split.some(cond => e[videoSheetColumn.STATUS].includes(cond)));
     } else {
       filter.caption = "あり";
-      filteredItems = filteredItems.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
+      filteredItems = filteredItems.filter(e => ["uploaded", "dotlive_button"].some(cond => e[videoSheetColumn.STATUS].includes(cond)));
     }
 
     const captionFilterItemToStatus = {};
@@ -210,9 +222,15 @@ export default {
       captionFilterItems: Object.keys(captionFilterItemToStatus)
     }
   },
+  fetch({ store, query }) {
+    store.commit("videoListPage/isAsrFilter", query.caption);
+    store.commit("search/channelIdFilter", query.channel ? query.channel : "");
+    store.commit("search/captionStatusFilter", query.caption ? query.caption : "");
+  },
   watch: {
     '$route': async function (to, from) {
       console.log("route");
+      console.log(to);
       if (this.channelIdToName[to.query.channel]) {
         sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER, to.query.channel);
         this.filter.channel = this.channelIdToName[to.query.channel];
@@ -223,24 +241,26 @@ export default {
         this.filteredItems = this.items;
       }
 
+
       if (this.captionStatusToFilterItems[to.query.caption]) {
         sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER, to.query.caption);
         this.filter.caption = this.captionStatusToFilterItems[to.query.caption];
         const split = to.query.caption.split(",");
-        this.filteredItems = this.filteredItems.filter(e => split.some(cond => cond === e[6]));
+        this.filteredItems = this.filteredItems.filter(e => split.some(cond => e[videoSheetColumn.STATUS].includes(cond)));
       } else {
         sessionStorage.removeItem(SESSION_STORAGE_CAPTION_FILTER);
         this.filter.caption = "あり";
-        this.filteredItems = this.filteredItems.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
+        this.filteredItems = this.filteredItems.filter(e => ["uploaded", "dotlive_button"].some(cond => e[videoSheetColumn.STATUS].includes(cond)));
       }
+
+      this.$store.commit("search/channelIdFilter", to.query.channel ? to.query.channel : "");
+      this.$store.commit("search/captionStatusFilter", to.query.caption ? to.query.caption : "");
+      this.$store.commit("videoListPage/isAsrFilter", to.query.caption);
 
       this.infiniteId++;
       this.displayItems = this.filteredItems.slice(0, Math.min(ITEM_PER_PAGE, this.filteredItems.length));
       sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(this.displayItems));
     }
-  },
-  created() {
-    this.$emit("searchTargetChangedEvent", "video");
   },
   methods: {
     onChannelFilterChanged(value) {

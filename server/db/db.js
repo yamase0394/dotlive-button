@@ -4,14 +4,10 @@ const shortid = require("shortid");
 const { promisify } = require("util");
 const { google } = require("googleapis");
 const slack = require(`${process.cwd()}/server/slackbot`);
+const youtubeClient = require("./youtubeClient");
 require("dotenv").config();
 
 const db = {};
-
-const youtube = google.youtube({
-  version: "v3",
-  auth: process.env.youtubeApiKey
-});
 
 slack.controller.hears("update:video-info", "direct_mention", async function(
   bot,
@@ -164,20 +160,14 @@ db.getChannelInfo = async function(channelId) {
   });
 
   if (res != null) {
-    console.log(`channel:${channelId} info found in cache`);
     return res;
   }
 
-  return await promisify(youtube.channels.list.bind(youtube))({
-    part: "snippet",
-    id: channelId
-  }).then(res => {
-    lock.acquire(Object.keys({ channelIdToData })[0], () => {
-      channelIdToData.set(channelId, res.data.items[0].snippet);
-    });
-    console.log(`channel:${channelId} info found in api`);
-    return res.data.items[0].snippet;
+  const items = await youtubeClient.getChannelInfo(channelId);
+  lock.acquire(Object.keys({ channelIdToData })[0], () => {
+    channelIdToData.set(channelId, items[0].snippet);
   });
+  return items[0].snippet;
 };
 
 db.getVideoInfos = async function() {
@@ -279,8 +269,8 @@ db.getSubtitleRange = async function(page, itemPerPage) {
 db.getSubtitleRangeByChannelId = async function(id, page, itemPerPage) {
   return await lock.acquire(Object.keys({ channelIdToSubtitles })[0], () => {
     const items = channelIdToSubtitles.get(id);
-    if (items.length === 0) {
-      throw new Error(`channel:${id} video does not exist`);
+    if (!items || items.length === 0) {
+      return [1, []];
     }
 
     const pageCount = Math.ceil(items.length / itemPerPage);
@@ -305,7 +295,11 @@ db.getSubtitleByVideoId = async function(id) {
         throw new Error(`video:${id} video does not exist`);
       }
 
-      return videoIdToSubtitles.get(id);
+      const result = videoIdToSubtitles.get(id);
+      if (result) {
+        return result;
+      }
+      return [];
     }
   );
 };

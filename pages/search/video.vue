@@ -92,12 +92,22 @@ import axios from "axios"
 import InfiniteLoading from 'vue-infinite-loading';
 
 const ITEM_PER_PAGE = 20;
-const SESSION_STORAGE_CHANNEL_FILTER = "searchVideoPreChannelFilter";
-const SESSION_STORAGE_CAPTION_FILTER = "videoListPreCaptionFilter";
-const SESSION_STORAGE_DISPLAY_ITEMS = "searchVideoPreDisplayItems";
-const SESSION_STORAGE_KEYWORD = "searchVideoKeyword";
+const SESSION_STORAGE_CHANNEL_FILTER_SEARCH = "searchVideoPreChannelFilterSearch";
+const SESSION_STORAGE_CAPTION_FILTER_SEARCH = "videoListPreCaptionFilterSearch";
+const SESSION_STORAGE_DISPLAY_ITEMS_SEARCH = "searchVideoPreDisplayItemsSearch";
+const SESSION_STORAGE_KEYWORD_SEARCH = "searchVideoKeywordSearch";
 const SESSION_STORAGE_VIDEO_DATA_VERSION = "videoDataVersion";
 const SESSION_STORAGE_VIDEO_DATA = "videoData";
+
+const videoSheetColumn = {
+  CHANNEL_ID: 0,
+  VIDEO_ID: 1,
+  PUBLISHED_AT: 2,
+  TITLE: 3,
+  DESCRIPTION: 4,
+  THUM_URL: 5,
+  STATUS: 6
+};
 
 export default {
   components: {
@@ -161,33 +171,32 @@ export default {
 
     if (channelIdToName[query.channel]) {
       filter.channel = channelIdToName[query.channel];
-      filteredItems = filteredItems.filter(e => e[0] === query.channel);
+      filteredItems = filteredItems.filter(e => e[videoSheetColumn.CHANNEL_ID] === query.channel);
     }
 
     const captionStatusToFilterItems = {
       "uploaded,dotlive_button": "あり",
-      "dotlive_button": "どっとライブボタン限定",
-      "can_upload": "アップロード可能",
+      "asr": "自動生成",
       "editable": "編集可",
       "not_permitted": "編集不可",
-      "waiting_ack": "審査待ち",
-      "checking": "確認中"
     };
     if (captionStatusToFilterItems[query.caption]) {
       filter.caption = captionStatusToFilterItems[query.caption];
       const split = query.caption.split(",");
-      filteredItems = filteredItems.filter(e => split.some(cond => cond === e[6]));
+      filteredItems = filteredItems.filter(e => split.some(cond => e[videoSheetColumn.STATUS].includes(cond)));
     } else {
-      filteredItems = filteredItems.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
+      filteredItems = filteredItems.filter(e => ["uploaded", "dotlive_button"].some(cond => e[videoSheetColumn.STATUS].includes(cond)));
     }
 
     if (query.keyword) {
       const searchRegs = query.keyword.split(/\s+/).map(str => new RegExp(str, "i"));
-      filteredItems = filteredItems.filter(e => searchRegs.every(reg => reg.test(e[3]) || reg.test[4]));
-      sessionStorage.setItem(SESSION_STORAGE_KEYWORD, query.keyword);
+      filteredItems = filteredItems.filter(e => searchRegs.every(
+        reg => reg.test(e[videoSheetColumn.TITLE]) || reg.test[videoSheetColumn.DESCRIPTION]
+      ));
+      sessionStorage.setItem(SESSION_STORAGE_KEYWORD_SEARCH, query.keyword);
     } else {
       filteredItems = [];
-      sessionStorage.removeItem(SESSION_STORAGE_KEYWORD)
+      sessionStorage.removeItem(SESSION_STORAGE_KEYWORD_SEARCH)
     }
 
     const captionFilterItemToStatus = {};
@@ -195,30 +204,30 @@ export default {
       captionFilterItemToStatus[captionStatusToFilterItems[key]] = key;
     });
     let displayItems;
-    if (sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS) &&
-      (query.channel === sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER) ||
-        !query.channel && !sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER)) &&
-      query.keyword === sessionStorage.getItem(SESSION_STORAGE_KEYWORD) &&
-      (query.caption === sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER) ||
-        !query.caption && !sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER))) {
+    if (sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS_SEARCH) &&
+      (query.channel === sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH) ||
+        !query.channel && !sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH)) &&
+      query.keyword === sessionStorage.getItem(SESSION_STORAGE_KEYWORD_SEARCH) &&
+      (query.caption === sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH) ||
+        !query.caption && !sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH))) {
       console.log("hit cache");
-      displayItems = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS));
+      displayItems = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS_SEARCH));
     } else {
       console.log("no cache");
       displayItems = filteredItems.slice(0, Math.min(ITEM_PER_PAGE, filteredItems.length));
 
-      sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(displayItems));
+      sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS_SEARCH, JSON.stringify(displayItems));
 
       if (channelNameToId[filter.channel]) {
-        sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER, channelNameToId[filter.channel]);
+        sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH, channelNameToId[filter.channel]);
       } else {
-        sessionStorage.removeItem(SESSION_STORAGE_CHANNEL_FILTER);
+        sessionStorage.removeItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH);
       }
 
       if (channelNameToId[filter.caption]) {
-        sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER, captionFilterItemToStatus[filter.caption]);
+        sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH, captionFilterItemToStatus[filter.caption]);
       } else {
-        sessionStorage.removeItem(SESSION_STORAGE_CAPTION_FILTER);
+        sessionStorage.removeItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH);
       }
     }
 
@@ -236,6 +245,12 @@ export default {
       captionFilterItems: Object.keys(captionFilterItemToStatus)
     }
   },
+  fetch({ store, params, query }) {
+    store.commit("search/target", "video");
+    store.commit("search/keyword", query.keyword ? query.keyword : "");
+    store.commit("search/channelIdFilter", query.channel ? query.channel : "");
+    store.commit("videoListPage/isAsrFilter", query.caption);
+  },
   watch: {
     "$route": async function (to, from) {
       console.log("route");
@@ -245,49 +260,41 @@ export default {
       if (to.query.keyword) {
         const searchRegs = to.query.keyword.split(/\s+/).map(str => new RegExp(str, "i"));
         temp = temp.filter(e => searchRegs.every(reg =>
-          reg.test(e[3]) || reg.test[4]
+          reg.test(e[videoSheetColumn.TITLE]) || reg.test[videoSheetColumn.DESCRIPTION]
         ));
-        sessionStorage.setItem(SESSION_STORAGE_KEYWORD, to.query.keyword);
+        sessionStorage.setItem(SESSION_STORAGE_KEYWORD_SEARCH, to.query.keyword);
       } else {
         temp = [];
-        sessionStorage.removeItem(SESSION_STORAGE_KEYWORD);
+        sessionStorage.removeItem(SESSION_STORAGE_KEYWORD_SEARCH);
       }
 
       if (this.channelIdToName[to.query.channel]) {
         this.filter.channel = this.channelIdToName[to.query.channel];
-        temp = temp.filter(e => to.query.channel === e[0]);
-        sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER, to.query.channel);
+        temp = temp.filter(e => to.query.channel === e[videoSheetColumn.CHANNEL_ID]);
+        sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH, to.query.channel);
       } else {
         this.filter.channel = "すべて";
-        sessionStorage.removeItem(SESSION_STORAGE_CHANNEL_FILTER);
+        sessionStorage.removeItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH);
       }
 
       if (this.captionStatusToFilterItems[to.query.caption]) {
-        sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER, to.query.caption);
+        sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH, to.query.caption);
         this.filter.caption = this.captionStatusToFilterItems[to.query.caption];
         const split = to.query.caption.split(",");
-        temp = temp.filter(e => split.some(cond => cond === e[6]));
+        temp = temp.filter(e => split.some(cond => e[videoSheetColumn.STATUS].includes(cond)));
       } else {
-        sessionStorage.removeItem(SESSION_STORAGE_CAPTION_FILTER);
+        sessionStorage.removeItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH);
         this.filter.caption = "あり";
-        temp = temp.filter(e => e[6] === "uploaded" || e[6] === "dotlive_button");
+        temp = temp.filter(e => ["uploaded", "dotlive_button"].some(cond => e[videoSheetColumn.STATUS].includes(cond)));
       }
+      this.$store.commit("videoListPage/isAsrFilter", to.query.caption);
 
       this.infiniteId++;
       this.filteredItems = temp;
       this.resultCount = this.filteredItems.length;
       this.displayItems = this.filteredItems.slice(0, Math.min(ITEM_PER_PAGE, this.filteredItems.length));
-      sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(this.displayItems));
-
-      // this.$nextTick(() => {
-      //   this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
-      // });
+      sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS_SEARCH, JSON.stringify(this.displayItems));
     }
-  },
-  async created() {
-    this.$emit("searchTargetChangedEvent", "video");
-    this.$emit("searchTextChangedEvent", this.$route.query.keyword);
-    this.noticeQueryUpdateToParent();
   },
   methods: {
     onChannelFilterChanged(value) {
@@ -319,12 +326,9 @@ export default {
           temp.push(this.filteredItems[i]);
         }
         this.displayItems = this.displayItems.concat(temp);
-        sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS, JSON.stringify(this.displayItems));
+        sessionStorage.setItem(SESSION_STORAGE_DISPLAY_ITEMS_SEARCH, JSON.stringify(this.displayItems));
         $state.loaded();
       }, 600);
-    },
-    noticeQueryUpdateToParent() {
-      this.$emit("keywordChangedEvent", this.$route.query.keyword);
     },
     onScroll(e) {
       if (typeof window === 'undefined') return;
@@ -347,7 +351,7 @@ export default {
 
 <style>
 .video-list-container {
-  padding: 30px 0 15px 0;
+  padding: 28px 0 15px 0;
   margin: 0;
 }
 </style>

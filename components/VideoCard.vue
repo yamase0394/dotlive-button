@@ -4,8 +4,7 @@
     ripple
     @click.native="onCardClicked()"
   >
-    <v-container
-      fluid>
+    <v-container fluid>
       <v-layout
         justify-start
         d-flex-inline
@@ -20,17 +19,16 @@
             max-width="246px"
           />
         </v-flex>
-        <v-flex
-          xs11
-        >
+        <v-flex xs11>
           <v-card-title>
             <div>
               <div class="grey--text">{{ publishedAt }}</div>
               <div
                 class="title"
-                v-html="title"/>
+                v-html="title"
+              />
               <div class="container grey--text">
-                <p v-html="description"/>
+                <p v-html="description" />
               </div>
             </div>
           </v-card-title>
@@ -70,13 +68,14 @@ export default {
   },
   methods: {
     onCardClicked() {
-      if (this.captionStatus === "uploaded"
-        || this.captionStatus === "dotlive_button"
-        || this.captionStatus === "can_upload"
-        || this.captionStatus === "waiting_ack") {
+      if (["uploaded", "dotlive_button", "can_upload", "waiting_ack"].some(e => e === this.captionStatus)) {
         this.$router.push(`/video/${this.videoId}`);
-      } else if (this.captionStatus === "editable" || this.captionStatus === "not_permitted") {
-        this.$router.push({ path: `/edit/caption/${this.videoId}`, query: { status: this.captionStatus } });
+      } else if (["editable", "not_permitted"].some(e => this.captionStatus.includes(e))) {
+        if (this.$store.state.videoListPage.isAsrFilter) {
+          this.$router.push(`/video/${this.videoId}`);
+        } else {
+          this.$router.push({ path: `/edit/caption/${this.videoId}`, query: { status: this.captionStatus } });
+        }
       }
     }
   }
@@ -84,6 +83,9 @@ export default {
 </script>
 
 <style>
+.video-card {
+  width: 100vw;
+}
 .video-card .container {
   overflow: hidden;
   padding: 0;

@@ -224,7 +224,6 @@ export default {
   data() {
     return {
       subtitles: [],
-      channelIdToThumb: {},
       start: null,
       end: null,
       repeats: true,
@@ -244,6 +243,7 @@ export default {
       snackbar: false,
       snackbarText: "",
       shareUrl: "",
+      isAsr: false
     }
   },
   async asyncData({ params, query, error }) {
@@ -253,6 +253,10 @@ export default {
     const end = Number(query.end);
 
     const resSub = await axios.post("/api/subtitle", { id: params.videoId, type: "video" });
+    if (resSub.data.items.length <= 0) {
+      error({ statusCode: 404, message: "字幕データがまだありません" });
+      return;
+    }
     for (const element of resSub.data.items) {
       if (start == Number(element[0]) && end == (Number(element[1]) * 1000 + Number(element[0]) * 1000) / 1000) {
         selectedText = element[2];
@@ -264,20 +268,16 @@ export default {
     const resVideo = await axios.post("/api/video", {
       id: params.videoId,
       type: "video"
+    }).catch(e => {
+      return e.response;
     });
-
-    const channelIdToThumb = {};
-    for (let element of resSub.data.items) {
-      if (!(element[3] in channelIdToThumb)) {
-        const resChannel = await axios.get(`/api/channel/${element[3]}`);
-        channelIdToThumb[element[3]] = resChannel.data.url;
-        break;
-      }
+    if (resVideo.status !== 200) {
+      error("aa");
+      return;
     }
 
     let videoUrl;
     const videoId = resVideo.data.items[1];
-    console.log(start);
     if (isNaN(start)) {
       videoUrl = `https://youtu.be/${videoId}`;
     } else {
@@ -297,7 +297,6 @@ export default {
 
     return {
       subtitles: resSub.data.items,
-      channelIdToThumb: channelIdToThumb,
       channelId: resVideo.data.items[0],
       videoId: videoId,
       publishedAt: resVideo.data.items[2],
@@ -310,6 +309,7 @@ export default {
       shareUrl: shareUrl,
       selectedText: selectedText,
       selectedId: selectedId,
+      isAsr: resVideo.data.items[6].includes("asr")
     };
   },
   mounted() {
@@ -402,12 +402,18 @@ export default {
       this.$refs.youtube.player.pauseVideo();
     },
     async sendPlayCount() {
-      if (this.selectedId && !lock.isBusy(`${this.start}${this.end}${this.selectedText}`)) {
-        await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
-          axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.selectedText, videoId: this.videoId, count: 1 }] });
-          await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
-        });
+      if (!this.selectedId || lock.isBusy(`${this.start}${this.end}${this.selectedText}`)) {
+        return;
       }
+
+      await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
+        if (this.isAsr) {
+          axios.post("/api/update/count/asr", { items: [{ count: 1, id: Number(this.selectedId) }] });
+        } else {
+          axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.selectedText, videoId: this.videoId, count: 1 }] });
+        }
+        await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
+      });
     }
   },
 }

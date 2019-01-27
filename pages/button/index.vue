@@ -14,51 +14,52 @@
         <v-icon>keyboard_arrow_up</v-icon>
       </v-btn>
     </v-fab-transition>
-    <v-layout
-      ref="rootLayout"
-      class="voice-root"
-      align-center
-      column
-    >
-      <v-flex>
-        <v-select
-          v-model="filter.channel"
-          :items="channelFilterItems"
-          :menu-props="{ maxHeight: '80vh' }"
-          @change="onChannelFilterChanged"
-        />
-      </v-flex>
-      <v-flex>
-        <v-container
-          fluid
-          px-5
-          pt-0
-          grid-list-md
-        >
-          <v-layout
-            row
-            wrap
-            class="voice-card-container"
+    <v-container class="voice-root">
+      <v-layout
+        ref="rootLayout"
+        align-center
+        column
+      >
+        <v-flex>
+          <v-select
+            v-model="filter.channel"
+            :items="channelFilterItems"
+            :menu-props="{ maxHeight: '80vh' }"
+            @change="onChannelFilterChanged"
+          />
+        </v-flex>
+        <v-flex>
+          <v-container
+            fluid
+            px-5
+            pt-0
+            grid-list-md
           >
-            <v-flex
-              v-for="item in subtitles"
-              :key="item[5]"
+            <v-layout
+              row
+              wrap
+              class="voice-card-container"
             >
-              <voice-card
-                :start="Number(item[0])"
-                :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
-                :text="(item[2])"
-                :video-id="item[4]"
-                :avater-url="channelIdToThumb[item[3]]"
-                :id="item[5]"
-                :ref="item[5]"
-                @btnClickedEvent="onVoiceCardBtnClicked"
-              />
-            </v-flex>
-          </v-layout>
-        </v-container>
-      </v-flex>
-    </v-layout>
+              <v-flex
+                v-for="item in subtitles"
+                :key="item[5]"
+              >
+                <voice-card
+                  :start="Number(item[0])"
+                  :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
+                  :text="(item[2])"
+                  :video-id="item[4]"
+                  :avater-url="channelIdToThumb[item[3]]"
+                  :id="item[5]"
+                  :ref="item[5]"
+                  @btnClickedEvent="onVoiceCardBtnClicked"
+                />
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-flex>
+      </v-layout>
+    </v-container>
     <infinite-loading
       ref="infiniteLoading"
       spinner="spiral"
@@ -102,7 +103,7 @@ export default {
       subtitleIdSet.add(e[5]);
     });
 
-    const channelIds = await axios.get("/api/subtitle/channel").then(res => {
+    const channelIds = await axios.get("/api/channel/list").then(res => {
       return res.data.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
@@ -144,7 +145,6 @@ export default {
     },
   },
   created() {
-    this.$emit("searchTargetChangedEvent", "button");
     this.$nextTick(() => {
       this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
     });
@@ -205,6 +205,7 @@ export default {
   margin: 20px 0;
 }
 .voice-root {
-  padding-top: 20px;
+  padding-top: 10px;
+  max-width: 90vw;
 }
 </style>

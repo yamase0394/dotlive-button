@@ -1,55 +1,56 @@
 <template>
-  <v-layout
-    class="voice-root"
-    align-center
-    column
-  >
-    <v-flex>
-      <v-select
-        v-model="filter.channel"
-        :items="channelFilterItems"
-        :menu-props="{ maxHeight: '80vh' }"
-        @change="onChannelFilterChanged"
-      />
-    </v-flex>
-    <v-flex>
-      <v-container
-        fluid
-        px-5
-        pt-0
-        grid-list-md
-      >
-        <v-layout
-          row
-          wrap
+  <v-container class="voice-root">
+    <v-layout
+      align-center
+      column
+    >
+      <v-flex>
+        <v-select
+          v-model="filter.channel"
+          :items="channelFilterItems"
+          :menu-props="{ maxHeight: '80vh' }"
+          @change="onChannelFilterChanged"
+        />
+      </v-flex>
+      <v-flex>
+        <v-container
+          fluid
+          px-5
+          pt-0
+          grid-list-md
         >
-          <v-flex
-            v-for="item in subtitles"
-            :key="item[5]"
+          <v-layout
+            row
+            wrap
           >
-            <voice-card
-              :start="Number(item[0])"
-              :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
-              :text="(item[2])"
-              :video-id="item[4]"
-              :avater-url="channelIdToThumb[item[3]]"
-              :id="item[5]"
-              :ref="item[5]"
-              @btnClickedEvent="onVoiceCardBtnClicked"
-            />
-          </v-flex>
-        </v-layout>
-      </v-container>
-    </v-flex>
-    <v-flex>
-      <v-pagination
-        v-model="pageNumber"
-        :length="pageCount"
-        :total-visible="9"
-        @input="next"
-      />
-    </v-flex>
-  </v-layout>
+            <v-flex
+              v-for="item in subtitles"
+              :key="item[5]"
+            >
+              <voice-card
+                :start="Number(item[0])"
+                :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
+                :text="(item[2])"
+                :video-id="item[4]"
+                :avater-url="channelIdToThumb[item[3]]"
+                :id="item[5]"
+                :ref="item[5]"
+                @btnClickedEvent="onVoiceCardBtnClicked"
+              />
+            </v-flex>
+          </v-layout>
+        </v-container>
+      </v-flex>
+      <v-flex>
+        <v-pagination
+          v-model="pageNumber"
+          :length="pageCount"
+          :total-visible="9"
+          @input="next"
+        />
+      </v-flex>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>
@@ -85,7 +86,7 @@ export default {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
     }
 
-    const channelIds = await axios.get("/api/subtitle/channel").then(res => {
+    const channelIds = await axios.get("/api/channel/list").then(res => {
       return res.data.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
@@ -120,6 +121,9 @@ export default {
       filter: filter
     };
   },
+  fetch({ store, query }) {
+    store.commit("search/channelIdFilter", query.channel ? query.channel : "");
+  },
   watch: {
     '$route': async function (to, from) {
       const page = to.query.page ? Number(to.query.page) : 1;
@@ -135,6 +139,8 @@ export default {
         this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
       }
 
+      this.$store.commit("search/channelIdFilter", to.query.channel ? to.query.channel : "");
+
       this.subtitles = res.data.items;
       this.pageCount = res.data.pageCount;
       this.pageNumber = page;
@@ -144,9 +150,6 @@ export default {
         this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
       });
     },
-  },
-  created() {
-    this.$emit("searchTargetChangedEvent", "button");
   },
   methods: {
     next() {
@@ -188,6 +191,7 @@ export default {
   margin: 20px 0;
 }
 .voice-root {
-  padding-top: 20px;
+  padding-top: 10px;
+  max-width: 90vw;
 }
 </style>

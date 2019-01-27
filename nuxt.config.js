@@ -31,7 +31,7 @@ module.exports = {
   /*
   ** Customize the progress-bar color
   */
-  loading: { color: "#FFFFFF" },
+  loading: { color: "#1976d2", height: "2px" },
 
   /*
   ** Global CSS
@@ -55,7 +55,8 @@ module.exports = {
       {
         id: "UA-53088406-3"
       }
-    ]
+    ],
+    ["@nuxtjs/redirect-module", [{ from: "^/$", to: "/button" }]]
   ],
   /*
   ** Axios module configuration

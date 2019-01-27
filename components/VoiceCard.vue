@@ -1,29 +1,29 @@
 <template>
-  <v-card
-    :class="[isSelected ?'selected-card': 'not-selected-card']" >
-    <v-card-actions
-      class="voice-card-actions">
+  <v-card :class="[isSelected ?'selected-card': 'not-selected-card']">
+    <v-card-actions class="voice-card-actions">
       <v-avatar
         class="avater"
         size="28px"
       >
-        <img
-          :src="avaterUrl" >
+        <img :src="avaterUrl">
       </v-avatar>
       <v-tooltip
         open-delay="500"
-        bottom>
+        bottom
+      >
         <v-btn
           slot="activator"
           :class="[isSelected ?'selected-card': 'not-selected-card']"
           depressed
           @click="open(); btnClicked();"
-          v-html="text"/>
+          v-html="text"
+        />
         <span>ポップアップで再生</span>
       </v-tooltip>
       <v-tooltip
         open-delay="500"
-        bottom>
+        bottom
+      >
         <v-btn
           slot="activator"
           :class="[isSelected ?'selected-card': 'not-selected-card',
@@ -31,8 +31,7 @@
           depressed
           @click="openDetail"
         >
-          <v-icon
-            small>
+          <v-icon small>
             open_in_new
           </v-icon>
         </v-btn>
@@ -40,10 +39,11 @@
       </v-tooltip>
       <youtube-dialog-detail
         ref="youtubeDialogDetail"
-        :start = "start"
-        :end = "end"
-        :video-id = "videoId"
-        :text = "text"
+        :start="start"
+        :end="end"
+        :video-id="videoId"
+        :text="text"
+        :id="id"
       />
     </v-card-actions>
   </v-card>

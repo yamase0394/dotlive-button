@@ -2,9 +2,10 @@ var express = require("express");
 var router = express.Router();
 
 const ITEM_PER_PAGE = 100;
-const RANDOM_ITEM_COUNT = 120;
+const RANDOM_ITEM_COUNT = 100;
 
 const db = require(`${process.cwd()}/server/db/db`);
+const captionAsr = require(`../db/captionAsr`);
 
 router.post("/", async function(req, res, next) {
   try {
@@ -21,9 +22,10 @@ router.post("/", async function(req, res, next) {
         };
         break;
       case "video":
-        const subsFilteredByVideoId = await db.getSubtitleByVideoId(
-          req.body.id
-        );
+        let subsFilteredByVideoId = await db.getSubtitleByVideoId(req.body.id);
+        if (subsFilteredByVideoId.length === 0) {
+          subsFilteredByVideoId = await captionAsr.seachByVideoId(req.body.id);
+        }
         resJson = { items: subsFilteredByVideoId };
         break;
       case "channel":

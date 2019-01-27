@@ -42,14 +42,6 @@
   </v-container>
 </template>
 
-<script>
-export default {
-  created() {
-    this.$emit("searchTargetChangedEvent", "video");
-  },
-}
-</script>
-
 <style>
 .headline__section {
   padding-bottom: 20px;

@@ -32,39 +32,55 @@
       <v-toolbar-side-icon @click="drawer = !drawer" />
       <router-link
         class="clickable__toolbar-title"
-        to="/button">
-        <v-toolbar-title
-          v-text="title"/>
+        to="/button"
+      >
+        <v-toolbar-title v-text="title" />
       </router-link>
-      <v-layout
-        align-center
-        column>
-        <v-flex xs12>
-          <v-text-field
-            v-model="searchText"
-            solo
-            class="searchbox"
-            clearable
-            hide-details
-            append-icon="search"
-            @click:append="search"
-            @keypress.enter.native="search"
-          />
-        </v-flex>
-      </v-layout>
+      <v-spacer />
+      <v-text-field
+        v-model="keyword"
+        solo
+        class="searchbox"
+        clearable
+        hide-details
+        append-icon="search"
+        @click:append="search"
+        @keypress.enter.native="search"
+      />
+      <v-radio-group
+        v-model="searchTarget"
+        class="radio--choose-target"
+        row
+      >
+        <v-radio
+          label="ボタン"
+          color="#1976d2"
+          value="button"
+        />
+        <v-radio
+          label="動画"
+          color="#1976d2"
+          value="video"
+        />
+      </v-radio-group>
+      <v-checkbox
+        v-show="searchTarget === 'button'"
+        v-model="includesAsr"
+        label="自動生成された字幕"
+        class="checkbox--include-asr"
+        color="#1976d2"
+      />
+      <v-spacer />
     </v-toolbar>
     <v-content>
       <v-container
         class="root-container"
-        fluid>
-        <nuxt-child
-          ref="child"
-          @searchTextChangedEvent="onSearchTextChangedAtChild"
-          @searchTargetChangedEvent="onSearchTargetChanged"
-        />
+        fluid
+      >
+        <nuxt-child />
       </v-container>
     </v-content>
-    <v-footer/>
+    <v-footer />
   </v-app>
 </template>
 
@@ -81,9 +97,36 @@ export default {
         { icon: "description", title: "このサイトについて", to: "/about" },
       ],
       title: '.LIVE ボタン',
-      searchText: "",
-      searching: false,
-      searchTarget: "button",
+      searching: false
+    }
+  },
+  computed: {
+    searchPath() {
+      return this.$store.getters["search/path"];
+    },
+    keyword: {
+      get() {
+        return this.$store.state.search.keyword;
+      },
+      set(val) {
+        this.$store.commit("search/keyword", val);
+      }
+    },
+    includesAsr: {
+      get() {
+        return this.$store.state.search.includesAsr;
+      },
+      set(val) {
+        this.$store.commit("search/includesAsr", val);
+      }
+    },
+    searchTarget: {
+      get() {
+        return this.$store.state.search.target;
+      },
+      set(val) {
+        this.$store.commit("search/target", val);
+      }
     }
   },
   methods: {
@@ -95,19 +138,13 @@ export default {
         return;
       }
 
-      if (this.searchText) {
-        this.$router.push({ path: `/search/${this.searchTarget}?keyword=${this.searchText}` });
+      if (this.keyword) {
+        this.$router.push({ path: this.searchPath });
         this.searching = true;
         setTimeout(() => { this.searching = false }, 500);
       }
-    },
-    onSearchTextChangedAtChild(newText) {
-      this.searchText = newText;
-    },
-    onSearchTargetChanged(target) {
-      this.searchTarget = target;
     }
-  }
+  },
 }
 </script>
 
@@ -131,6 +168,35 @@ export default {
 }
 .searchbox .v-input__control .v-input__slot {
   margin-bottom: 0;
+}
+.v-toolbar__content .v-input {
+  flex-grow: 0 !important;
+}
+.checkbox--include-asr {
+  margin-left: 12px !important;
+}
+.checkbox--include-asr .v-messages {
+  min-height: 0;
+}
+.checkbox--include-asr.v-input--selection-controls:not(.v-input--hide-details)
+  .v-input__slot {
+  margin-bottom: 0;
+}
+.checkbox--include-asr.v-input--selection-controls {
+  padding-top: 0;
+}
+.radio--choose-target {
+  margin-left: 20px !important;
+}
+.radio--choose-target .v-messages {
+  min-height: 0;
+}
+.radio--choose-target.v-input--selection-controls:not(.v-input--hide-details)
+  .v-input__slot {
+  margin-bottom: 0;
+}
+.radio--choose-target.v-input--selection-controls {
+  padding-top: 0;
 }
 .root-container {
   padding: 0;

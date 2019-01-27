@@ -498,7 +498,7 @@ export default {
   },
   async asyncData({ params, query }) {
     let notifycanEditAtYoutubeDialog = false;
-    if (query.status === "editable") {
+    if (query.status.includes("editable")) {
       notifycanEditAtYoutubeDialog = true;
     }
 
@@ -565,7 +565,6 @@ export default {
     }
   },
   created() {
-    this.$emit("searchTargetChangedEvent", "video");
     if (localStorage.getItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId)) {
       this.subtitleList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId));
       this.autoSave = true;
