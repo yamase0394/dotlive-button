@@ -80,7 +80,6 @@
 <script>
 import VideoCard from '~/components/VideoCard.vue'
 import CaptionStatusFilterHelpDialog from '~/components/CaptionStatusFilterHelpDialog.vue'
-import axios from "axios"
 import InfiniteLoading from 'vue-infinite-loading';
 
 const ITEM_PER_PAGE = 20;
@@ -122,9 +121,9 @@ export default {
       infiniteId: 0
     }
   },
-  async asyncData({ query }) {
+  async asyncData({ query, $axios }) {
     console.log("asyncData");
-    const items = await axios.post("/api/video", {
+    const items = await $axios.$post("/api/video", {
       type: "all",
       version: sessionStorage.getItem(SESSION_STORAGE_VIDEO_DATA_VERSION)
     }).then(res => {
@@ -132,15 +131,15 @@ export default {
         return JSON.parse(sessionStorage.getItem(SESSION_STORAGE_VIDEO_DATA));
       }
 
-      sessionStorage.setItem(SESSION_STORAGE_VIDEO_DATA_VERSION, res.data.version);
-      sessionStorage.setItem(SESSION_STORAGE_VIDEO_DATA, JSON.stringify(res.data.items));
-      return res.data.items;
+      sessionStorage.setItem(SESSION_STORAGE_VIDEO_DATA_VERSION, res.version);
+      sessionStorage.setItem(SESSION_STORAGE_VIDEO_DATA, JSON.stringify(res.items));
+      return res.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
     });
 
-    const channelIds = await axios.get("/api/channel/list").then(res => {
-      return res.data.items;
+    const channelIds = await $axios.$get("/api/channel/list").then(res => {
+      return res.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
     });
@@ -150,11 +149,11 @@ export default {
     const filter = { channel: "すべて", caption: "あり" };
     let filteredItems = items;
     for (let channelId of channelIds) {
-      const res = await axios.get(`/api/channel/${channelId}`).catch(e => {
+      const res = await $axios.$get(`/api/channel/${channelId}`).catch(e => {
         this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
       });
-      channelNameToId[res.data.channelName] = channelId;
-      channelIdToName[channelId] = res.data.channelName;
+      channelNameToId[res.channelName] = channelId;
+      channelIdToName[channelId] = res.channelName;
     }
 
     if (channelIdToName[query.channel]) {
@@ -181,6 +180,7 @@ export default {
     Object.keys(captionStatusToFilterItems).forEach(key => {
       captionFilterItemToStatus[captionStatusToFilterItems[key]] = key;
     });
+
     let displayItems;
     if (sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS) &&
       (query.channel === sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER) ||
@@ -230,7 +230,6 @@ export default {
   watch: {
     '$route': async function (to, from) {
       console.log("route");
-      console.log(to);
       if (this.channelIdToName[to.query.channel]) {
         sessionStorage.setItem(SESSION_STORAGE_CHANNEL_FILTER, to.query.channel);
         this.filter.channel = this.channelIdToName[to.query.channel];
@@ -240,7 +239,6 @@ export default {
         this.filter.channel = "すべて";
         this.filteredItems = this.items;
       }
-
 
       if (this.captionStatusToFilterItems[to.query.caption]) {
         sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER, to.query.caption);

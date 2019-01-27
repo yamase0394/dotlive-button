@@ -55,7 +55,6 @@
 
 <script>
 import VoiceCard from '~/components/VoiceCard.vue'
-import axios from "axios"
 
 export default {
   components: {
@@ -74,20 +73,21 @@ export default {
       selectedVoiceCard: "-1",
     }
   },
-  async asyncData({ params, query, error }) {
+  async asyncData({ params, query, error, $axios }) {
     const page = isNaN(parseInt(query.page)) ? 1 : Number(query.page);
-    let res;
-    if (query.channel != null) {
-      res = await axios.post("/api/subtitle", { page: page, id: query.channel, type: "channel" });
-    } else {
-      res = await axios.post("/api/subtitle", { page: page, type: "all" });
-    }
-    if (res.status !== 200) {
+    let subtitleRes;
+    try {
+      if (query.channel != null) {
+        subtitleRes = await $axios.$post("/api/subtitle", { page: page, id: query.channel, type: "channel" });
+      } else {
+        subtitleRes = await $axios.$post("/api/subtitle", { page: page, type: "all" });
+      }
+    } catch (e) {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
     }
 
-    const channelIds = await axios.get("/api/channel/list").then(res => {
-      return res.data.items;
+    const channelIds = await $axios.$get("/api/channel/list").then(res => {
+      return res.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
     });
@@ -97,14 +97,14 @@ export default {
     const channelNameToId = {};
     const filter = { channel: "すべて" };
     for (let channelId of channelIds) {
-      const res = await axios.get(`/api/channel/${channelId}`).catch(e => {
+      const res = await $axios.$get(`/api/channel/${channelId}`).catch(e => {
         this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
       });
-      channelIdToThumb[channelId] = res.data.url;
-      channelIdToName[channelId] = res.data.channelName;
-      channelNameToId[res.data.channelName] = channelId;
+      channelIdToThumb[channelId] = res.url;
+      channelIdToName[channelId] = res.channelName;
+      channelNameToId[res.channelName] = channelId;
       if (query.channel === channelId) {
-        filter.channel = res.data.channelName;
+        filter.channel = res.channelName;
       }
     }
 
@@ -112,8 +112,8 @@ export default {
 
     return {
       pageNumber: page,
-      pageCount: res.data.pageCount,
-      subtitles: res.data.items,
+      pageCount: subtitleRes.pageCount,
+      subtitles: subtitleRes.items,
       channelIdToThumb: channelIdToThumb,
       channelIdToName: channelIdToName,
       channelNameToId: channelNameToId,
@@ -127,22 +127,19 @@ export default {
   watch: {
     '$route': async function (to, from) {
       const page = to.query.page ? Number(to.query.page) : 1;
-      let res;
+      let subtitleRes;
       if (this.channelIdToName[to.query.channel]) {
         this.filter.channel = this.channelIdToName[to.query.channel];
-        res = await axios.post("/api/subtitle", { page: page, id: to.query.channel, type: "channel" });
+        subtitleRes = await this.$axios.$post("/api/subtitle", { page: page, id: to.query.channel, type: "channel" });
       } else {
         this.filter.channel = "すべて";
-        res = await axios.post("/api/subtitle", { page: page, type: "all" });
-      }
-      if (res.status !== 200) {
-        this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
+        subtitleRes = await this.$axios.$post("/api/subtitle", { page: page, type: "all" });
       }
 
       this.$store.commit("search/channelIdFilter", to.query.channel ? to.query.channel : "");
 
-      this.subtitles = res.data.items;
-      this.pageCount = res.data.pageCount;
+      this.subtitles = subtitleRes.items;
+      this.pageCount = subtitleRes.pageCount;
       this.pageNumber = page;
       this.selectedVoiceCard = "-1";
 

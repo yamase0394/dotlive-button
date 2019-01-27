@@ -146,7 +146,6 @@
 import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
 import VueClipboard from 'vue-clipboard2'
-import axios from "axios"
 import AsyncLock from "async-lock";
 
 Vue.use(VueYoutube)
@@ -227,17 +226,17 @@ export default {
       };
       loop.bind(this)();
     },
-    open: async function () {
-      await axios.post(`/api/video`,
+    async open() {
+      await this.$axios.$post(`/api/video`,
         {
           id: this.videoId,
           type: "video"
-        }).then(result => {
-          this.channelId = result.data.items[0];
-          this.publishedAt = new Date(result.data.items[2]).toLocaleString();
-          this.title = result.data.items[3];
+        }).then(res => {
+          this.channelId = res.items[0];
+          this.publishedAt = new Date(res.items[2]).toLocaleString();
+          this.title = res.items[3];
           this.dialog = true;
-          this.isAsr = result.data.items[6];
+          this.isAsr = res.items[6];
         }).catch(e => {
           console.log(e);
           window.open(this.youTubeUrl);
@@ -271,9 +270,9 @@ export default {
 
       await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
         if (this.isAsr) {
-          axios.post("/api/update/count/asr", { items: [{ count: 1, id: Number(this.id) }] });
+          this.$axios.$post("/api/update/count/asr", { items: [{ count: 1, id: Number(this.id) }] });
         } else {
-          axios.post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: 1 }] });
+          this.$axios.$post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.text, videoId: this.videoId, count: 1 }] });
         }
         await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
       });

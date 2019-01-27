@@ -500,7 +500,6 @@ import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
 import SubtitleCard from "~/components/SubtitleCard.vue"
 import download from "downloadjs"
-import axios from "axios"
 import parseSRT from 'parse-srt'
 import VueVirtualScroller from 'vue-virtual-scroller'
 
@@ -873,7 +872,7 @@ export default {
           output.push([subtitle.start, subtitle.end - subtitle.start, subtitle.text]);
         });
 
-        await axios.post("/api/edit/subtitle", {
+        await this.$axios.$post("/api/edit/subtitle", {
           videoId: this.videoId,
           items: output
         }).then(res => {

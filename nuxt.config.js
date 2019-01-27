@@ -5,8 +5,8 @@ module.exports = {
   mode: "spa",
 
   /*
-  ** Headers of the page
-  */
+   ** Headers of the page
+   */
   head: {
     title: ".LIVE ボタン",
     meta: [
@@ -29,23 +29,23 @@ module.exports = {
   },
 
   /*
-  ** Customize the progress-bar color
-  */
+   ** Customize the progress-bar color
+   */
   loading: { color: "#1976d2", height: "2px" },
 
   /*
-  ** Global CSS
-  */
+   ** Global CSS
+   */
   css: ["~/assets/style/app.styl"],
 
   /*
-  ** Plugins to load before mounting the App
-  */
-  plugins: ["@/plugins/vuetify"],
+   ** Plugins to load before mounting the App
+   */
+  plugins: ["@/plugins/vuetify", "~/plugins/axios"],
 
   /*
-  ** Nuxt.js modules
-  */
+   ** Nuxt.js modules
+   */
   modules: [
     // Doc: https://github.com/nuxt-community/axios-module#usage
     "@nuxtjs/axios",
@@ -59,19 +59,19 @@ module.exports = {
     ["@nuxtjs/redirect-module", [{ from: "^/$", to: "/button" }]]
   ],
   /*
-  ** Axios module configuration
-  */
+   ** Axios module configuration
+   */
   axios: {
     // See https://github.com/nuxt-community/axios-module#options
   },
 
   /*
-  ** Build configuration
-  */
+   ** Build configuration
+   */
   build: {
     /*
-    ** You can extend webpack config here
-    */
+     ** You can extend webpack config here
+     */
     extend(config, ctx) {
       // Run ESLint on save
       if (ctx.isDev && ctx.isClient) {

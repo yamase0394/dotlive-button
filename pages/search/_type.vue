@@ -62,7 +62,6 @@
 
 <script>
 import VoiceCard from '~/components/VoiceCard.vue'
-import axios from "axios"
 
 export default {
   components: {
@@ -82,41 +81,33 @@ export default {
       resultCount: 0,
     }
   },
-  async asyncData({ params, query, error }) {
+  async asyncData({ params, query, error, $axios }) {
     console.log("asyncData");
 
     const page = isNaN(parseInt(query.page)) ? 1 : Number(query.page);
 
-    let res;
+    let searchResult = {
+      resultCount: 0,
+      pageCount: 0,
+      items: []
+    };
     if (query.keyword) {
       if (query.channel != null) {
-        console.log(query.channel);
-        res = await axios.post("/api/search/" + params.type, {
+        searchResult = await $axios.$post("/api/search/" + params.type, {
           keyword: query.keyword,
           page: page,
           filter: { type: "channel", id: query.channel }
         });
       } else {
-        res = await axios.post("/api/search/" + params.type, {
+        searchResult = await $axios.$post("/api/search/" + params.type, {
           keyword: query.keyword,
           page: page
         });
       }
-      if (res.status !== 200) {
-        this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
-      }
-    } else {
-      res = {
-        data: {
-          resultCount: 0,
-          pageCount: 0,
-          items: []
-        }
-      };
     }
 
-    const channelIds = await axios.get("/api/channel/list").then(res => {
-      return res.data.items;
+    const channelIds = await $axios.$get("/api/channel/list").then(res => {
+      return res.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
     });
@@ -126,14 +117,14 @@ export default {
     const channelNameToId = {};
     const filter = { channel: "すべて" };
     for (let channelId of channelIds) {
-      const res = await axios.get(`/api/channel/${channelId}`).catch(e => {
+      const res = await $axios.$get(`/api/channel/${channelId}`).catch(e => {
         this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
       });
-      channelIdToThumb[channelId] = res.data.url;
-      channelIdToName[channelId] = res.data.channelName;
-      channelNameToId[res.data.channelName] = channelId;
+      channelIdToThumb[channelId] = res.url;
+      channelIdToName[channelId] = res.channelName;
+      channelNameToId[res.channelName] = channelId;
       if (query.channel === channelId) {
-        filter.channel = res.data.channelName;
+        filter.channel = res.channelName;
       }
     }
 
@@ -141,9 +132,9 @@ export default {
 
     return {
       pageNumber: page,
-      resultCount: res.data.resultCount,
-      pageCount: res.data.pageCount,
-      subtitles: res.data.items,
+      resultCount: searchResult.resultCount,
+      pageCount: searchResult.pageCount,
+      subtitles: searchResult.items,
       channelIdToThumb: channelIdToThumb,
       channelIdToName: channelIdToName,
       channelNameToId: channelNameToId,
@@ -167,31 +158,29 @@ export default {
 
       const page = to.query.page ? Number(to.query.page) : 1;
 
-      let res;
+      let reqBody;
       if (this.channelIdToName[to.query.channel]) {
         console.log("search channel");
         this.filter.channel = this.channelIdToName[to.query.channel];
-        res = await axios.post("/api/search/" + to.params.type, {
+        reqBody = {
           keyword: to.query.keyword,
           page: page,
           filter: { type: "channel", id: to.query.channel }
-        });
+        };
         this.$store.commit("search/channelIdFilter", to.query.channel);
       } else {
         this.filter.channel = "すべて";
-        res = await axios.post("/api/search/" + to.params.type, {
+        reqBody = {
           keyword: to.query.keyword,
           page: page
-        });
+        };
         this.$store.commit("search/channelIdFilter", "");
       }
-      if (res.status !== 200) {
-        this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
-      }
+      const searchResult = await this.$axios.$post("/api/search/" + to.params.type, reqBody);
 
-      this.resultCount = res.data.resultCount;
-      this.subtitles = res.data.items;
-      this.pageCount = res.data.pageCount;
+      this.resultCount = searchResult.resultCount;
+      this.subtitles = searchResult.items;
+      this.pageCount = searchResult.pageCount;
       this.pageNumber = page;
       this.selectedVoiceCard = "-1";
 

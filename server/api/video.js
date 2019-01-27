@@ -8,7 +8,7 @@ router.post("/", async function(req, res) {
 
     const version = await db.getVersion("video");
     if (reqJson.hasOwnProperty("version") && reqJson.version === version) {
-      res.status(204).send();
+      res.sendStatus(204);
       return;
     }
 

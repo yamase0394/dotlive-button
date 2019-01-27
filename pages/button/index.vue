@@ -73,8 +73,9 @@
 
 <script>
 import VoiceCard from '~/components/VoiceCard.vue'
-import axios from "axios"
 import InfiniteLoading from 'vue-infinite-loading';
+
+const SUBTITLE_SHEET_COLUMN_ID = 5;
 
 export default {
   components: {
@@ -94,35 +95,34 @@ export default {
       scrollToTopFab: false
     }
   },
-  async asyncData({ params, query, error }) {
-    const res = await axios.post("/api/subtitle", { type: "random" }).catch(e => {
-      this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
-    });
-    const subtitleIdSet = new Set();
-    res.data.items.forEach(e => {
-      subtitleIdSet.add(e[5]);
-    });
+  async asyncData({ params, query, error, $axios }) {
+    const subtitles = await $axios.$post("/api/subtitle", { type: "random" })
+      .then(res => res.items)
+      .catch(e => {
+        this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
+      });
+    const subtitleIdSet = new Set(subtitles.map(e => e[SUBTITLE_SHEET_COLUMN_ID]));
 
-    const channelIds = await axios.get("/api/channel/list").then(res => {
-      return res.data.items;
-    }).catch(e => {
-      this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
-    });
+    const channelIds = await $axios.$get("/api/channel/list")
+      .then(res => res.items)
+      .catch(e => {
+        this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
+      });
 
     const channelIdToThumb = {};
     const channelIdToName = {};
     const channelNameToId = {}
     for (let channelId of channelIds) {
-      const res = await axios.get(`/api/channel/${channelId}`).catch(e => {
+      const res = await $axios.$get(`/api/channel/${channelId}`).catch(e => {
         this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
       });
-      channelIdToThumb[channelId] = res.data.url;
-      channelIdToName[channelId] = res.data.channelName;
-      channelNameToId[res.data.channelName] = channelId;
+      channelIdToThumb[channelId] = res.url;
+      channelIdToName[channelId] = res.channelName;
+      channelNameToId[res.channelName] = channelId;
     }
 
     return {
-      subtitles: res.data.items,
+      subtitles: subtitles,
       channelIdToThumb: channelIdToThumb,
       channelIdToName: channelIdToName,
       channelNameToId: channelNameToId,
@@ -133,11 +133,11 @@ export default {
   watch: {
     '$route': async function (to, from) {
 
-      const res = await axios.post("/api/subtitle", { type: "random" }).catch(e => {
+      const items = await this.$axios.$post("/api/subtitle", { type: "random" }).catch(e => {
         this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
       });
 
-      this.subtitles = this.subtitles.concat(res.data.items);
+      this.subtitles = this.subtitles.concat(items);
 
       this.$nextTick(() => {
         this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
@@ -172,14 +172,19 @@ export default {
     infiniteHandler($state) {
       console.log("infinite");
       setTimeout(async () => {
-        const res = await axios.post("/api/subtitle", { type: "random" }).catch(e => {
-          this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
+        const newSubtitles = await this.$axios.$post("/api/subtitle", { type: "random" })
+          .then(res => res.items)
+          .catch(e => {
+            this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
+          });
+
+        const filteredSubtitles = newSubtitles.filter(e => !this.subtitleIdSet.has(e[SUBTITLE_SHEET_COLUMN_ID]));
+        filteredSubtitles
+        .map(e => e[SUBTITLE_SHEET_COLUMN_ID])
+        .forEach(e => {
+          this.subtitleIdSet.add(e);
         });
-        const temp = res.data.items.filter(e => !this.subtitleIdSet.has(e[5]));
-        temp.forEach(e => {
-          this.subtitleIdSet.add(e[5]);
-        })
-        this.subtitles = this.subtitles.concat(temp);
+        this.subtitles = this.subtitles.concat(filteredSubtitles);
         $state.loaded();
       }, 600);
     },
