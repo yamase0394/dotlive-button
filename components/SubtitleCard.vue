@@ -4,23 +4,28 @@
     ripple
     @click.native="onCardClicked()"
   >
-    <v-container
-      class="subtitle-card-container">
+    <v-container class="subtitle-card-container">
       <v-layout row>
         <v-layout
           class="flex-grow-0 time__layout"
-          column>
+          column
+        >
           <v-flex class="padding-4">
             <v-radio
               :value="id"
               color="#1976d2"
-              style="margin:0;"/>
+              style="margin:0;"
+            />
           </v-flex>
           <v-flex class="padding-4">
-            <p class="time__text">{{ startTime }}</p>
+            <p class="time__text">
+              {{ startTime }}
+            </p>
           </v-flex>
           <v-flex class="padding-4">
-            <p class="time__text">{{ endTime }}</p>
+            <p class="time__text">
+              {{ endTime }}
+            </p>
           </v-flex>
         </v-layout>
         <v-textarea
@@ -30,13 +35,17 @@
           readonly
           hide-details
           auto-grow
-          rows="2"/>
+          rows="2"
+        />
         <v-btn
           class="small__btn"
           small
           icon
-          @click="onCloseClicked">
-          <v-icon small> close </v-icon>
+          @click="onCloseClicked"
+        >
+          <v-icon small>
+            close
+          </v-icon>
         </v-btn>
       </v-layout>
     </v-container>

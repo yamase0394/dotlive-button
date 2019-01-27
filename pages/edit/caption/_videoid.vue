@@ -1,9 +1,9 @@
 <template>
   <div>
     <v-snackbar
+      v-model="snackbar"
       :color="snackbarColor"
       :timeout="8000"
-      v-model="snackbar"
       top
     >
       {{ snackbarText }}
@@ -11,11 +11,13 @@
         dark
         flat
         @click="snackbar = false"
-      >閉じる</v-btn>
+      >
+        閉じる
+      </v-btn>
     </v-snackbar>
     <v-snackbar
-      :timeout="8000"
       v-model="errorSnackbar"
+      :timeout="8000"
       color="error"
       top
     >
@@ -27,7 +29,9 @@
           $refs.dynamicScroller.scrollToItem(errorIndex);
           errorSnackbar = false;
         }"
-      >該当箇所に移動</v-btn>
+      >
+        該当箇所に移動
+      </v-btn>
     </v-snackbar>
     <v-dialog
       v-model="progressDialog"
@@ -35,7 +39,8 @@
       width="300"
     >
       <v-card>
-        <v-card-text>アップロード中
+        <v-card-text>
+          アップロード中
           <v-progress-linear
             class="mb-0"
             color="white"
@@ -56,7 +61,9 @@
           <v-btn
             flat="flat"
             @click="notifycanEditAtYoutubeDialog = false"
-          >閉じる</v-btn>
+          >
+            閉じる
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -72,14 +79,18 @@
             color="red darken-1"
             flat
             @click="confirmDialog = false"
-          >キャンセル</v-btn>
+          >
+            キャンセル
+          </v-btn>
           <v-btn
             :color="confirmDialogAceeptButtonColor"
             @click="() => {
               confirmDialog = false;
               confirmDialogAcceptFunction()
             }"
-          >{{ confirmDialogAcceptText }}</v-btn>
+          >
+            {{ confirmDialogAcceptText }}
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -112,20 +123,26 @@
           flat
           @click="showPickSubRipFileDialog"
         >
-          <v-icon left>insert_drive_file</v-icon>SubRipファイルを読み込む
+          <v-icon left>
+            insert_drive_file
+          </v-icon>SubRipファイルを読み込む
         </v-btn>
         <v-btn
           flat
           @click="downloadSubRip"
         >
-          <v-icon left>get_app</v-icon>SubRipファイルを保存
+          <v-icon left>
+            get_app
+          </v-icon>SubRipファイルを保存
         </v-btn>
         <v-btn
           :loading="progressDialog"
           flat
           @click="uploadButtonClicked"
         >
-          <v-icon left>cloud_upload</v-icon>字幕をアップロード
+          <v-icon left>
+            cloud_upload
+          </v-icon>字幕をアップロード
         </v-btn>
       </v-toolbar-items>
     </v-toolbar>
@@ -145,8 +162,8 @@
             <v-layout column>
               <v-flex class="flex-grow-0">
                 <v-responsive
-                  :aspect-ratio="16/9"
                   :key="videoId"
+                  :aspect-ratio="16/9"
                 >
                   <youtube
                     ref="youtube"
@@ -162,7 +179,9 @@
                     <span
                       v-if="displaySubtitle"
                       class="subtitle__background"
-                    >{{ displaySubtitle }}</span>
+                    >
+                      {{ displaySubtitle }}
+                    </span>
                   </p>
                 </v-responsive>
               </v-flex>
@@ -187,7 +206,9 @@
                     depressed
                     @click="replayVideo(1)"
                   >
-                    <v-icon left>chevron_left</v-icon>1秒
+                    <v-icon left>
+                      chevron_left
+                    </v-icon>1秒
                   </v-btn>
                 </v-flex>
                 <v-flex class="flex-grow-0">
@@ -204,8 +225,11 @@
                     class="small-button"
                     depressed
                     @click="forwardVideo(1)"
-                  >1秒
-                    <v-icon right>chevron_right</v-icon>
+                  >
+                    1秒
+                    <v-icon right>
+                      chevron_right
+                    </v-icon>
                   </v-btn>
                 </v-flex>
                 <v-flex class="flex-grow-0">
@@ -230,7 +254,9 @@
                   xs12
                 >
                   <v-btn @click="playFromSelectedStart">
-                    <v-icon left>play_arrow</v-icon>編集中の開始時間から再生
+                    <v-icon left>
+                      play_arrow
+                    </v-icon>編集中の開始時間から再生
                   </v-btn>
                 </v-flex>
                 <v-flex
@@ -248,7 +274,9 @@
                   md3
                   xs6
                 >
-                  <v-btn @click="setCurrentTimeToStart">現在の再生時間</v-btn>
+                  <v-btn @click="setCurrentTimeToStart">
+                    現在の再生時間
+                  </v-btn>
                 </v-flex>
                 <v-flex
                   class="flex-grow-0"
@@ -272,28 +300,36 @@
                       md3
                       xs6
                     >
-                      <v-btn @click="changeSelectedStart(-1)">-1</v-btn>
+                      <v-btn @click="changeSelectedStart(-1)">
+                        -1
+                      </v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn @click="changeSelectedStart(-0.1)">-0.1</v-btn>
+                      <v-btn @click="changeSelectedStart(-0.1)">
+                        -0.1
+                      </v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn @click="changeSelectedStart(0.1)">+0.1</v-btn>
+                      <v-btn @click="changeSelectedStart(0.1)">
+                        +0.1
+                      </v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn @click="changeSelectedStart(1)">+1</v-btn>
+                      <v-btn @click="changeSelectedStart(1)">
+                        +1
+                      </v-btn>
                     </v-flex>
                   </v-layout>
                 </v-flex>
@@ -302,7 +338,9 @@
                   md3
                   xs6
                 >
-                  <v-btn @click="setCurrentTimeToEnd">現在の再生時間</v-btn>
+                  <v-btn @click="setCurrentTimeToEnd">
+                    現在の再生時間
+                  </v-btn>
                 </v-flex>
                 <v-flex
                   class="flex-grow-0"
@@ -326,28 +364,36 @@
                       md3
                       xs6
                     >
-                      <v-btn @click="changeSelectedEnd(-1)">-1</v-btn>
+                      <v-btn @click="changeSelectedEnd(-1)">
+                        -1
+                      </v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn @click="changeSelectedEnd(-0.1)">-0.1</v-btn>
+                      <v-btn @click="changeSelectedEnd(-0.1)">
+                        -0.1
+                      </v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn @click="changeSelectedEnd(0.1)">+0.1</v-btn>
+                      <v-btn @click="changeSelectedEnd(0.1)">
+                        +0.1
+                      </v-btn>
                     </v-flex>
                     <v-flex
                       class="flex-grow-0"
                       md3
                       xs6
                     >
-                      <v-btn @click="changeSelectedEnd(1)">+1</v-btn>
+                      <v-btn @click="changeSelectedEnd(1)">
+                        +1
+                      </v-btn>
                     </v-flex>
                   </v-layout>
                 </v-flex>
@@ -377,7 +423,9 @@
               row
             >
               <v-btn @click="addSubtitleCard">
-                <v-icon left>add_comment</v-icon>字幕を追加
+                <v-icon left>
+                  add_comment
+                </v-icon>字幕を追加
               </v-btn>
               <v-menu
                 bottom
@@ -407,8 +455,8 @@
               >
                 <dynamic-scroller
                   ref="dynamicScroller"
-                  :items="subtitleList"
                   :key="selectedSubtitleVer"
+                  :items="subtitleList"
                   :min-item-height="86"
                   style="height:100%"
                 >
@@ -419,15 +467,15 @@
                       :size-dependencies="[item.text, item.height]"
                     >
                       <v-flex
-                        v-resize="onSubtitleCardResized(item)"
                         ref="subtitleCardContainer"
                         :key="item.id"
+                        v-resize="onSubtitleCardResized(item)"
                       >
                         <subtitle-card
-                          :end="item.end"
                           :id="item.id"
-                          :prop-has-error="item.hasError"
                           :ref="item.id"
+                          :end="item.end"
+                          :prop-has-error="item.hasError"
                           :selected-id="selectedId"
                           :start="item.start"
                           :text="item.text"

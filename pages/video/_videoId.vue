@@ -59,14 +59,18 @@
                 class="video-info-container"
                 xs12
               >
-                <div class="grey--text">{{ new Date(publishedAt).toLocaleString() }}</div>
+                <div class="grey--text">
+                  {{ new Date(publishedAt).toLocaleString() }}
+                </div>
                 <div
                   class="video-title"
                   v-html="videoTitle"
                 />
                 <v-divider />
                 <div :style="{marginTop:'5px'}">
-                  <span class="grey--text"> 内容 </span><br>
+                  <span class="grey--text">
+                    内容
+                  </span><br>
                   <span
                     :style="{marginLeft:'5px'}"
                     v-html="selectedText"
@@ -76,7 +80,8 @@
               <v-flex
                 :style="{marginTop:'3px', maxHeight:'14px'}"
                 class="no-padding grey--text"
-              >URL
+              >
+                URL
               </v-flex>
               <v-layout align-center>
                 <v-flex
@@ -94,10 +99,10 @@
                 <v-flex class="no-padding">
                   <v-tooltip top>
                     <v-btn
+                      slot="activator"
                       v-clipboard:copy="shareUrl"
                       v-clipboard:success="onCopy"
                       v-clipboard:error="onCopyError"
-                      slot="activator"
                       class="small-button"
                       depressed
                     >
@@ -126,7 +131,9 @@
               </v-layout>
               <v-flex class="no-padding">
                 <div :style="{marginTop:'10px'}">
-                  <span class="grey--text"> 説明 </span><br>
+                  <span class="grey--text">
+                    説明
+                  </span><br>
                 </div>
                 <div
                   :class="['video-description', expandDescriptionBtnText == 'もっと見る' ?'video-description-hidden':'']"
@@ -147,18 +154,21 @@
                     class="g-ytsubscribe"
                     data-layout="full"
                     data-theme="dark"
-                    data-count="default"/>
+                    data-count="default"
+                  />
                 </div>
               </v-flex>
             </v-layout>
           </v-layout>
         </v-flex>
         <v-flex
-          xs5>
+          xs5
+        >
           <v-layout
             column
             px-3
-            pt-0>
+            pt-0
+          >
             <v-flex>
               <v-text-field
                 v-model="filterText"
@@ -174,21 +184,24 @@
               <v-container
                 fluid
                 class="flex-container"
-                grid-list-md >
+                grid-list-md
+              >
                 <v-layout
                   ref="scrollableSubLayout"
                   row
                   wrap
                   class="flex-scrollable"
-                  align-content-start>
+                  align-content-start
+                >
                   <v-flex
                     v-for="item in filteredSubtitles"
-                    :key="item[5]">
+                    :key="item[5]"
+                  >
                     <simple-voice-card
+                      :id="item[5]"
                       :start="Number(item[0])"
                       :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
                       :text="item[2]"
-                      :id="item[5]"
                       :selected-id="selectedId"
                       @btnClicked="onVoiceBtnClicked"
                     />

@@ -1,13 +1,12 @@
 <template>
-  <v-card
-    :class="[id == selectedId ?'selected-card': 'not-selected-card']"
-  >
+  <v-card :class="[id == selectedId ?'selected-card': 'not-selected-card']">
     <v-btn
       :class="[id == selectedId ?'selected-card': 'not-selected-card',
                'simple-voice-card-btn']"
       depressed
       @click="onClicked"
-      v-html="text"/>
+      v-html="text"
+    />
   </v-card>
 </template>
 

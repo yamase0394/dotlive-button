@@ -38,12 +38,12 @@
         <span>動画ページを開く</span>
       </v-tooltip>
       <youtube-dialog-detail
+        :id="id"
         ref="youtubeDialogDetail"
         :start="start"
         :end="end"
         :video-id="videoId"
         :text="text"
-        :id="id"
       />
     </v-card-actions>
   </v-card>

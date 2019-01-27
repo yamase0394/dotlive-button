@@ -6,10 +6,14 @@
     >
       <v-flex xs12>
         <div class="headline__section">
-          <p class="display-1"> 字幕作成 </p>
-          <v-divider/>
+          <p class="display-1">
+            字幕作成
+          </p>
+          <v-divider />
         </div>
-        <p class="headline"> はじめに </p>
+        <p class="headline">
+          はじめに
+        </p>
         <div class="normal__section">
           <p class="body-2">
             どっとライブボタンは、YouTubeの字幕からボタンを生成しています。<br>
@@ -18,9 +22,13 @@
             そこで、字幕の作成と、一時的な管理を行う機能を作りました。
           </p>
         </div>
-        <p><v-divider/></p>
+        <p>
+          <v-divider />
+        </p>
         <div class="normal__section">
-          <p class="headline"> 使い方 </p>
+          <p class="headline">
+            使い方
+          </p>
           <p class="body-2">
             動画一覧もしくは、動画検索ページの字幕フィルターで編集可（YouTube公式の字幕作成機能でも編集できる）または、<br>
             編集不可（YouTubeでは字幕の作成が許可されていない）を選択します。<br>

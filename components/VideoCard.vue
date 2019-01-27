@@ -22,7 +22,9 @@
         <v-flex xs11>
           <v-card-title>
             <div>
-              <div class="grey--text">{{ publishedAt }}</div>
+              <div class="grey--text">
+                {{ publishedAt }}
+              </div>
               <div
                 class="title"
                 v-html="title"

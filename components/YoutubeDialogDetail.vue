@@ -53,13 +53,19 @@
           </v-responsive>
           <v-card-title>
             <div>
-              <span class="grey--text">{{ publishedAt }}</span><br>
+              <span class="grey--text">
+                {{ publishedAt }}
+              </span><br>
               <span v-html="title" /><br>
               <div :style="{marginTop:'3px'}">
-                <span class="grey--text"> 内容 </span><br>
+                <span class="grey--text">
+                  内容
+                </span><br>
                 <span v-html="text" /><br>
                 <div :style="{marginTop:'3px'}">
-                  <span class="grey--text"> URL </span><br>
+                  <span class="grey--text">
+                    URL
+                  </span><br>
                 </div>
               </div>
             </div>
@@ -73,10 +79,10 @@
             />
             <v-tooltip top>
               <v-btn
+                slot="activator"
                 v-clipboard:copy="shareUrl"
                 v-clipboard:success="onCopy"
                 v-clipboard:error="onCopyError"
-                slot="activator"
                 depressed
                 class="small-button"
               >
@@ -120,7 +126,8 @@
               class="g-ytsubscribe"
               data-layout="full"
               data-theme="dark"
-              data-count="default"/>
+              data-count="default"
+            />
           </div>
         </v-card-text>
       </v-card>
@@ -133,7 +140,6 @@
       {{ snackbarText }}
     </v-snackbar>
   </v-layout>
-
 </template>
 
 <script>
