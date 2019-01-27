@@ -1,6 +1,6 @@
 {
   "name": "dotlive-button",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": ".LIVEに所属するメンバーの声を再生するWebアプリケーションです",
   "author": "s y",
   "private": true,
