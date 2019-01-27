@@ -344,6 +344,9 @@ db.searchSubtitle = async (searchText, page, itemPerPage) => {
   const items = await lock.acquire(Object.keys({ subtitles })[0], () => {
     return subtitles.filter(e => searchRegs.every(reg => reg.test(e[2])));
   });
+  if (items.length === 0) {
+    return [0, 1, []];
+  }
 
   const pageCount = Math.ceil(items.length / itemPerPage);
   const pageNumber = Math.min(page, pageCount);
@@ -361,15 +364,20 @@ db.searchSubtitleFromChannel = async (
   itemPerPage
 ) => {
   const searchRegs = searchText.split(/\s+/).map(str => new RegExp(str, "i"));
-
   const items = await lock.acquire(
     Object.keys({ channelIdToSubtitles })[0],
     () => {
-      return channelIdToSubtitles
-        .get(channelId)
-        .filter(e => searchRegs.every(reg => reg.test(e[2])));
+      const target = channelIdToSubtitles.get(channelId);
+      if (target) {
+        return target.filter(e => searchRegs.every(reg => reg.test(e[2])));
+      } else {
+        return [];
+      }
     }
   );
+  if (items.length === 0) {
+    return [0, 1, []];
+  }
 
   const pageCount = Math.ceil(items.length / itemPerPage);
   const pageNumber = Math.min(page, pageCount);
