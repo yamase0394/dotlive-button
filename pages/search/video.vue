@@ -192,10 +192,8 @@ export default {
       filteredItems = filteredItems.filter(e => searchRegs.every(
         reg => reg.test(e[videoSheetColumn.TITLE]) || reg.test[videoSheetColumn.DESCRIPTION]
       ));
-      sessionStorage.setItem(SESSION_STORAGE_KEYWORD_SEARCH, query.keyword);
     } else {
       filteredItems = [];
-      sessionStorage.removeItem(SESSION_STORAGE_KEYWORD_SEARCH)
     }
 
     const captionFilterItemToStatus = {};
@@ -203,15 +201,19 @@ export default {
       captionFilterItemToStatus[captionStatusToFilterItems[key]] = key;
     });
 
+    const storedDisplayItem = sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS_SEARCH);
+    const storedChannelFilter = sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH);
+    const storedKeyword = sessionStorage.getItem(SESSION_STORAGE_KEYWORD_SEARCH);
+    const storedCaptionStatusFilter = sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH);
     let displayItems;
-    if (sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS_SEARCH) &&
-      (query.channel === sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH) ||
-        !query.channel && !sessionStorage.getItem(SESSION_STORAGE_CHANNEL_FILTER_SEARCH)) &&
-      query.keyword === sessionStorage.getItem(SESSION_STORAGE_KEYWORD_SEARCH) &&
-      (query.caption === sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH) ||
-        !query.caption && !sessionStorage.getItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH))) {
+    if (storedDisplayItem &&
+      (query.channel === storedChannelFilter ||
+        !query.channel && !storedChannelFilter) &&
+      query.keyword === storedKeyword &&
+      (query.caption === storedCaptionStatusFilter ||
+        !query.caption && !storedCaptionStatusFilter)) {
       console.log("hit cache");
-      displayItems = JSON.parse(sessionStorage.getItem(SESSION_STORAGE_DISPLAY_ITEMS_SEARCH));
+      displayItems = JSON.parse(storedDisplayItem);
     } else {
       console.log("no cache");
       displayItems = filteredItems.slice(0, Math.min(ITEM_PER_PAGE, filteredItems.length));
@@ -228,6 +230,12 @@ export default {
         sessionStorage.setItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH, captionFilterItemToStatus[filter.caption]);
       } else {
         sessionStorage.removeItem(SESSION_STORAGE_CAPTION_FILTER_SEARCH);
+      }
+
+      if (query.keyword) {
+        sessionStorage.setItem(SESSION_STORAGE_KEYWORD_SEARCH, query.keyword);
+      } else {
+        sessionStorage.removeItem(SESSION_STORAGE_KEYWORD_SEARCH)
       }
     }
 
