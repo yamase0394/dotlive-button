@@ -236,7 +236,7 @@ export default {
           this.publishedAt = new Date(res.items[2]).toLocaleString();
           this.title = res.items[3];
           this.dialog = true;
-          this.isAsr = res.items[6];
+          this.isAsr = res.items[6].includes("asr");
         }).catch(e => {
           console.log(e);
           window.open(this.youTubeUrl);
