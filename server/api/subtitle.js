@@ -51,8 +51,8 @@ router.post("/", async function(req, res, next) {
 
     res.send(resJson);
   } catch (e) {
-    console.log(e.toString());
-    res.status(404).send("page not found");
+    next({ message: e.stack });
+    res.sendStatus(500);
   }
 });
 
@@ -62,8 +62,8 @@ router.get("/channel", async (req, res, next) => {
 
     res.send({ items: items });
   } catch (e) {
-    console.log(e.toString());
-    res.status(404).send("page not found");
+    next({ message: e.stack });
+    res.sendStatus(500);
   }
 });
 

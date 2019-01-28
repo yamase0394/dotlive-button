@@ -9,19 +9,19 @@ const captionManager =
     ? process.env.CAPTION_MANAGER_NAME
     : process.env.CAPTION_MANAGER_NAME_DEV;
 
-router.post("/", async function(req, res) {
+router.post("/", async function(req, res, next) {
   try {
     const reqJson = req.body;
     let result = await db.createSheet(reqJson.videoId);
     if (result.result !== "success") {
-      console.log(result);
+      next({ message: result.message });
       res.status(404).send(result.message);
       return;
     }
 
     result = await db.writeToSheet(reqJson.videoId, reqJson.items);
     if (result.result !== "success") {
-      console.log(result);
+      next({ message: result.message });
       res.status(404).send(result.message);
       return;
     }
@@ -30,8 +30,8 @@ router.post("/", async function(req, res) {
 
     res.send(result);
   } catch (e) {
-    console.log(e);
-    res.status(404).send("unknown error");
+    next({ message: e.stack });
+    res.sendStatus(500);
   }
 });
 

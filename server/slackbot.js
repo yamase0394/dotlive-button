@@ -3,15 +3,18 @@ require("dotenv").config();
 
 const slackbot = {};
 
-let slackToken;
-let channel;
-if (process.env.NODE_ENV === "development") {
-  slackToken = process.env.slackApiKeyDev;
-  channel = "#dotlive_button_dev";
-} else {
-  slackToken = process.env.slackApiKey;
-  channel = "#dotlive_button";
-}
+const channel =
+  process.env.NODE_ENV === "production"
+    ? "#dotlive_button"
+    : "#dotlive_button_dev";
+const slackToken =
+  process.env.NODE_ENV === "production"
+    ? process.env.slackApiKey
+    : process.env.slackApiKeyDev;
+const ADMIN_INCOMING_WEBHOOK_URL =
+  process.env.NODE_ENV === "production"
+    ? process.env.SLACK_ADMIN_INCOMING_WEBHOOK_URL
+    : process.env.SLACK_ADMIN_INCOMING_WEBHOOK_URL_DEV;
 
 slackbot.controller = Botkit.slackbot({
   debug: false
@@ -46,6 +49,28 @@ slackbot.say = text => {
   bot.say({
     text: text,
     channel: channel
+  });
+};
+
+slackbot.sendMessageToAdmin = message => {
+  bot.configureIncomingWebhook({
+    url: ADMIN_INCOMING_WEBHOOK_URL
+  });
+  bot.sendWebhook({ text: message });
+};
+
+slackbot.sendErrorToAdmin = message => {
+  bot.configureIncomingWebhook({
+    url: ADMIN_INCOMING_WEBHOOK_URL
+  });
+  bot.sendWebhook({
+    text: "Error",
+    attachments: [
+      {
+        color: "#D00000",
+        text: "```" + message + "```"
+      }
+    ]
   });
 };
 

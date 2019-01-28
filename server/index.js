@@ -1,6 +1,8 @@
 const express = require("express");
 const consola = require("consola");
 const { Nuxt, Builder } = require("nuxt");
+const slackbot = require("./slackbot");
+
 const app = express();
 const host = process.env.HOST || "localhost";
 const port = process.env.PORT || 3000;
@@ -33,6 +35,10 @@ async function start() {
 
   // Give nuxt middleware to express
   app.use(nuxt.render);
+
+  app.use(function(err, req, res, next) {
+    slackbot.sendErrorToAdmin(err.message);
+  });
 
   // Listen the server
   app.listen(port, host);

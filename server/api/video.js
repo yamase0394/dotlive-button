@@ -2,7 +2,7 @@ var express = require("express");
 var router = express.Router();
 const db = require(`${process.cwd()}/server/db/db`);
 
-router.post("/", async function(req, res) {
+router.post("/", async function(req, res, next) {
   try {
     const reqJson = req.body;
 
@@ -29,8 +29,8 @@ router.post("/", async function(req, res) {
     }
     res.send({ items: data, version: version });
   } catch (e) {
-    console.log(e);
-    res.status(404).send("unknown error");
+    next({ message: e.stack });
+    res.sendStatus(500);
   }
 });
 

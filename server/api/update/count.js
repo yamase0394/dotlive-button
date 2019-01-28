@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const slack = require(`${process.cwd()}/server/slackbot`);
+const slackbot = require("../../slackbot");
 const AsyncLock = require("async-lock");
 const captionAsr = require(`../../db/captionAsr`);
 
@@ -10,14 +10,13 @@ const SLACK_BOT_NAME =
   process.env.NODE_ENV === "production"
     ? process.env.CAPTION_MANAGER_NAME
     : process.env.CAPTION_MANAGER_NAME_DEV;
-const SEND_INTERVAL = 10000;
+const SEND_INTERVAL = 15000;
 
 const lock = new AsyncLock();
 const countList = [];
 
-router.post("/", async (req, res) => {
+router.post("/", async (req, res, next) => {
   try {
-    console.log("hoge");
     await lock.acquire("lock", () => {
       for (const item of req.body.items) {
         const existing = countList.find(
@@ -38,32 +37,37 @@ router.post("/", async (req, res) => {
 
     res.send({ result: "success" });
   } catch (e) {
-    console.log(e);
-    res.status(404).send("unknown error");
+    next({ message: e.stack });
+    res.sendStatus(500);
   }
 });
 
-router.post("/asr", async (req, res) => {
+router.post("/asr", async (req, res, next) => {
   try {
     for (const item of req.body.items) {
       captionAsr.updateCount(item.id, item.count);
     }
     res.send({ result: "success" });
   } catch (e) {
-    console.log(e);
-    res.status(404).send("unknown error");
+    next({ message: e.stack });
+    res.sendStatus(500);
   }
 });
 
 const sendCount = async () => {
-  await lock.acquire("lock", () => {
-    if (countList.length > 0) {
-      slack.say(
-        `<@${SLACK_BOT_NAME}> update count ${JSON.stringify(countList)}`
-      );
-      countList.length = 0;
-    }
-  });
+  await lock
+    .acquire("lock", () => {
+      if (countList.length > 0) {
+        slackbot.say(
+          `<@${SLACK_BOT_NAME}> update count ${JSON.stringify(countList)}`
+        );
+        countList.length = 0;
+      }
+    })
+    .catch(e => {
+      slackbot.sendErrorToAdmin(e.stack);
+    });
+
   setTimeout(sendCount, SEND_INTERVAL);
 };
 sendCount();
