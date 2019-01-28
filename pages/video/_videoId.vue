@@ -416,9 +416,23 @@ export default {
 
       await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
         if (this.isAsr) {
-          this.$axios.$post("/api/update/count/asr", { items: [{ count: 1, id: Number(this.selectedId) }] });
+          this.$axios({
+            method: "POST",
+            url: "/api/update/count/asr",
+            progress: false,
+            data: {
+              items: [{ count: 1, id: Number(this.selectedId) }]
+            }
+          });
         } else {
-          this.$axios.$post("/api/update/count", { items: [{ start: this.start, end: this.end, text: this.selectedText, videoId: this.videoId, count: 1 }] });
+          this.$axios({
+            method: "POST",
+            url: "/api/update/count",
+            progress: false,
+            data: {
+              items: [{ start: this.start, end: this.end, text: this.selectedText, videoId: this.videoId, count: 1 }]
+            }
+          });
         }
         await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
       });
