@@ -1019,5 +1019,21 @@ export default {
   min-width: auto !important;
   margin: 0;
 }
+.vue-recycle-scroller__item-wrapper {
+    box-sizing: border-box;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+.vue-recycle-scroller.ready .vue-recycle-scroller__item-view {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+}
+.vue-recycle-scroller:not(.page-mode) {
+    overflow-y: auto;
+}
 </style>
 
