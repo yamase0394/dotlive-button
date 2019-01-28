@@ -1,7 +1,7 @@
 {
   "name": "dotlive-button",
   "version": "1.0.3",
-  "description": ".LIVEに所属するメンバーの声を再生するWebアプリケーションです",
+  "description": ".LIVE（どっとライブ）に所属するメンバーの声を再生するWebアプリです。シロちゃん、ばあちゃる、アイドル部のボタンがあります。",
   "author": "s y",
   "private": true,
   "scripts": {
