@@ -42,6 +42,7 @@
         solo
         class="searchbox"
         clearable
+        color="#1976d2"
         hide-details
         append-icon="search"
         @click:append="search"
