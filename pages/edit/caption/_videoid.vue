@@ -76,7 +76,6 @@
         <v-card-actions>
           <v-spacer />
           <v-btn
-            color="red darken-1"
             flat
             @click="confirmDialog = false"
           >
@@ -108,13 +107,20 @@
     >
       <v-toolbar-items>
         <v-tooltip bottom>
-          <v-switch
+          <v-chip
             slot="activator"
-            v-model="autoSave"
-            color="#1976d2"
-            label="変更を自動保存"
-          />
-          <span>ページを離れても編集が保存されます</span>
+            class="connectionCount"
+            disabled
+            :color="connectionCount === 1 ? 'grey darken-4': 'red'"
+            text-color="white"
+            label
+          >
+            <v-avatar>
+              <v-icon>account_circle</v-icon>
+            </v-avatar>
+            {{ connectionCount }}
+          </v-chip>
+          <span>このページを見ている人の数</span>
         </v-tooltip>
       </v-toolbar-items>
       <v-spacer />
@@ -170,10 +176,8 @@
                     :video-id="videoId"
                     height="100%"
                     width="100%"
-                    @error="videoError"
                     @paused="videoPaused"
                     @playing="playingVideo"
-                    @ready="readyVideo"
                   />
                   <p class="subtitle__text">
                     <span
@@ -195,7 +199,7 @@
                   <v-btn
                     class="small-button"
                     depressed
-                    @click="replayVideo(5)"
+                    @click="seekVideo(-5)"
                   >
                     <v-icon>replay_5</v-icon>
                   </v-btn>
@@ -204,7 +208,7 @@
                   <v-btn
                     class="small-button"
                     depressed
-                    @click="replayVideo(1)"
+                    @click="seekVideo(-1)"
                   >
                     <v-icon left>
                       chevron_left
@@ -224,7 +228,7 @@
                   <v-btn
                     class="small-button"
                     depressed
-                    @click="forwardVideo(1)"
+                    @click="seekVideo(1)"
                   >
                     1秒
                     <v-icon right>
@@ -236,7 +240,7 @@
                   <v-btn
                     class="small-button"
                     depressed
-                    @click="forwardVideo(5)"
+                    @click="seekVideo(5)"
                   >
                     <v-icon>forward_5</v-icon>
                   </v-btn>
@@ -502,9 +506,9 @@ import SubtitleCard from "~/components/SubtitleCard.vue"
 import download from "downloadjs"
 import parseSRT from 'parse-srt'
 import VueVirtualScroller from 'vue-virtual-scroller'
+import io from 'socket.io-client'
 
 const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
-const LOCAL_STORAGE_EDIT_CAPTION = "editCaption";
 
 Vue.use(VueYoutube)
 Vue.use(VueVirtualScroller)
@@ -540,18 +544,26 @@ export default {
       confirmDialogAceeptButtonColor: "green darken-1",
       errorSnackbar: false,
       errorIndex: -1,
-      autoSave: false
+      socket: "",
+      connectionCount: 1
     }
   },
-  async asyncData({ params, query }) {
+  async asyncData({ params, query, $axios }) {
     let notifycanEditAtYoutubeDialog = false;
     if (query.status.includes("editable")) {
       notifycanEditAtYoutubeDialog = true;
     }
 
+    const res = await $axios.$post("/api/edit/subtitle/get", { videoId: params.videoId });
+    const subtitleList = [];
+    for (let i = 0; i < res.items.length; i++) {
+      subtitleList.push({ id: i, start: res.items[i][0], end: res.items[i][1], text: res.items[i][2] });
+    }
+
     return {
-      videoId: params.videoid,
-      notifycanEditAtYoutubeDialog: notifycanEditAtYoutubeDialog
+      videoId: params.videoId,
+      notifycanEditAtYoutubeDialog: notifycanEditAtYoutubeDialog,
+      subtitleList: subtitleList
     }
   },
   watch: {
@@ -559,7 +571,7 @@ export default {
       if (this.preSelectedId !== -1) {
         try {
           this.$refs[this.preSelectedId].select(false);
-        } catch (e) { }
+        } catch (e) { console.log(e) };
       }
 
       if (val === -1) {
@@ -592,35 +604,19 @@ export default {
     selectedSubtitle(val) {
       this.$refs[this.selectedId].setSubtitle(val);
       this.subtitleList.find(e => e.id === this.selectedId).text = val;
-      if (this.autoSave) {
-        localStorage.setItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId, JSON.stringify(this.subtitleList));
-      }
-      console.log("selectedSub");
-    },
-    subtitleList(val) {
-      if (this.autoSave && val && val.length > 0) {
-        localStorage.setItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId, JSON.stringify(val));
-      }
-      console.log("subtitleList");
-    },
-    autoSave(val) {
-      if (val) {
-        localStorage.setItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId, JSON.stringify(this.subtitleList));
-      } else {
-        localStorage.removeItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId);
-      }
-    }
-  },
-  created() {
-    if (localStorage.getItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId)) {
-      this.subtitleList = JSON.parse(localStorage.getItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId));
-      this.autoSave = true;
     }
   },
   destroyed() {
+    this.socket.disconnect();
     this.destroyed = true;
   },
   mounted() {
+    this.socket = io();
+    this.socket.on("connectionCount", message => {
+      this.connectionCount = message.connectionCount;
+    })
+    this.socket.emit("join", { id: this.videoId });
+
     async function loop() {
       if (this.destroyed) {
         return;
@@ -677,23 +673,13 @@ export default {
       this.formatEndTime(currentTime);
     },
     playingVideo() {
-      console.log("playing");
       this.playIcon = "pause";
     },
-    readyVideo() {
-      console.log("ready");
-    },
-    videoError() {
-      console.log("error");
-    },
     videoPaused() {
-      console.log("paused");
       this.playIcon = "play_arrow";
     },
     formatStartTime(val) {
-      console.log("change start");
       const tempTime = Math.floor(Number(val) * 1000) / 1000;
-      console.log(val);
       if (tempTime > this.selectedEnd) {
         this.$nextTick(() => {
           this.selectedEnd = tempTime;
@@ -710,7 +696,6 @@ export default {
       });
     },
     formatEndTime(val) {
-      console.log("change end");
       const tempTime = Math.ceil(Number(val) * 1000) / 1000;
       let newEndTime;
       if (tempTime < this.selectedStart) {
@@ -727,7 +712,6 @@ export default {
       });
     },
     sortAndCheckOrder() {
-      console.log("sortAndCheckOrder");
       this.errorSnackbar = false;
 
       this.subtitleList.sort((a, b) => {
@@ -761,16 +745,14 @@ export default {
           target.hasError = true;
           try {
             this.$refs[target.id].error(true);
-          } catch (e) { };
+          } catch (e) { console.log(e) };
           oneBefore.hasError = true;
           try {
             this.$refs[oneBefore.id].error(true);
-          } catch (e) { };
+          } catch (e) { console.log(e) };
 
           if (!this.errorSnackbar) {
-            this.errorIndex = i - 1;
-            this.snackbarText = "時間が重なっています";
-            this.errorSnackbar = true;
+            this.showSubtitleListErrorSnackbar("時間が重なっています", i - 1);
           }
 
           continue;
@@ -780,12 +762,10 @@ export default {
           target.hasError = true;
           try {
             this.$refs[target.id].error(true);
-          } catch (e) { };
+          } catch (e) { console.log(e) };
 
           if (!this.errorSnackbar) {
-            this.errorIndex = i;
-            this.snackbarText = "開始時間と終了時間が同じです";
-            this.errorSnackbar = true;
+            this.showSubtitleListErrorSnackbar("開始時間と終了時間が同じです", i);
           }
 
           continue;
@@ -794,7 +774,7 @@ export default {
         target.hasError = false;
         try {
           this.$refs[target.id].error(false);
-        } catch (e) { };
+        } catch (e) { console.log(e) };
       }
     },
     onPlayButtonClicked() {
@@ -808,13 +788,9 @@ export default {
       this.$refs.youtube.player.seekTo(this.selectedStart, true);
       this.$refs.youtube.player.playVideo();
     },
-    async forwardVideo(diff) {
+    async seekVideo(diff) {
       const currentTime = await this.$refs.youtube.player.getCurrentTime();
       this.$refs.youtube.player.seekTo(currentTime + diff, true);
-    },
-    async replayVideo(diff) {
-      const currentTime = await this.$refs.youtube.player.getCurrentTime();
-      this.$refs.youtube.player.seekTo(currentTime - diff, true);
     },
     downloadSubRip() {
       this.subtitleList.forEach((e, i) => {
@@ -823,7 +799,6 @@ export default {
         }
 
         if (e.end > this.subtitleList[i + 1].start) {
-          console.log(e.end + "-" + this.subtitleList[i + 1].start);
           e.end = this.subtitleList[i + 1].start;
         }
       });
@@ -845,15 +820,10 @@ export default {
         });
         download(output, `字幕_${this.videoId}.srt`, "text/plaing");
 
-        this.snackbarText = "ダウンロード完了";
-        this.snackbarColor = "success";
+        this.showSuccessSnackbar("ダウンロード完了");
       } else {
-        this.snackbarText = "字幕を入力してください";
-        this.snackbarColor = "error";
+        this.showErrorSnackbar("字幕を入力してください");
       }
-
-      this.snackbar = true;
-      localStorage.removeItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId);
     },
     async uploadSubtitle() {
       this.progressDialog = true;
@@ -865,7 +835,6 @@ export default {
       }
 
       const filteredSubtitleList = this.subtitleList.filter(e => !e.text);
-      console.log(filteredSubtitleList);
       if (filteredSubtitleList.length === 0) {
         let output = [];
         this.subtitleList.forEach((subtitle, index) => {
@@ -876,15 +845,10 @@ export default {
           videoId: this.videoId,
           items: output
         }).then(res => {
-          this.snackbarText = "アップロード完了";
-          this.snackbarColor = "success";
-          this.snackbar = true;
-          localStorage.removeItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId);
+          this.showSuccessSnackbar("アップロード完了");
         }).catch(error => {
           console.log(error.response.data);
-          this.snackbarText = `アップロード失敗${error.response.data}`;
-          this.snackbarColor = "error";
-          this.snackbar = true;
+          this.showErrorSnackbar(`アップロード失敗${error.response.data}`);
         });
       } else {
         filteredSubtitleList.forEach(e => {
@@ -923,19 +887,17 @@ export default {
             this.sortAndCheckOrder();
           });
         } catch (e) {
-          this.snackbarText = "読み込みに失敗しました";
-          this.snackbarColor = "error";
-          this.snackbar = true;
+          this.showErrorSnackbar("読み込みに失敗しました");
           console.log(e);
         }
       }.bind(this)
     },
     onSubtitleCardResized(item) {
-      try {
-        this.$nextTick(() => {
+      this.$nextTick(() => {
+        try {
           item.height = this.$refs.subtitleCardContainer.clientHeight;
-        });
-      } catch (e) { }
+        } catch (e) { console.log(e) }
+      });
     },
     uploadButtonClicked() {
       this.confirmDialogText = "字幕をどっとライブボタンにアップロードします";
@@ -958,7 +920,6 @@ export default {
       this.selectedStart = 0;
       this.selectedEnd = 0;
       this.selectedSubtitle = "";
-      localStorage.removeItem(LOCAL_STORAGE_EDIT_CAPTION + this.videoId);
     },
     changeSelectedStart(diff) {
       this.selectedStart = (this.selectedStart * 10 + diff * 10) / 10;
@@ -967,6 +928,21 @@ export default {
     changeSelectedEnd(diff) {
       this.selectedEnd = (this.selectedEnd * 10 + diff * 10) / 10;
       this.formatEndTime(this.selectedEnd);
+    },
+    showSuccessSnackbar(message) {
+      this.snackbarText = message;
+      this.snackbarColor = "success";
+      this.snackbar = true;
+    },
+    showErrorSnackbar(message) {
+      this.snackbarText = message;
+      this.snackbarColor = "error";
+      this.snackbar = true;
+    },
+    showSubtitleListErrorSnackbar(message, errorIndex) {
+      this.errorIndex = errorIndex;
+      this.snackbarText = message;
+      this.errorSnackbar = true;
     }
   }
 }
@@ -1020,20 +996,23 @@ export default {
   margin: 0;
 }
 .vue-recycle-scroller__item-wrapper {
-    box-sizing: border-box;
-    width: 100%;
-    overflow: hidden;
-    position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
 }
 .vue-recycle-scroller.ready .vue-recycle-scroller__item-view {
-    width: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    will-change: transform;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
 }
 .vue-recycle-scroller:not(.page-mode) {
-    overflow-y: auto;
+  overflow-y: auto;
+}
+.connectionCount.v-chip {
+  margin: 0;
 }
 </style>
 

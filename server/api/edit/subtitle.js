@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const db = require(`${process.cwd()}/server/db/db`);
+const db = require(`../../db/db`);
 const slack = require(`${process.cwd()}/server/slackbot`);
 require("dotenv").config();
 
@@ -29,6 +29,19 @@ router.post("/", async function(req, res, next) {
     slack.say(`<@${captionManager}> newSheet:${reqJson.videoId}`);
 
     res.send(result);
+  } catch (e) {
+    next({ message: e.stack });
+    res.sendStatus(500);
+  }
+});
+
+router.post("/get", async function(req, res, next) {
+  try {
+    const items = await db.getUploadedCaptionSpreadsheetContent(
+      req.body.videoId
+    );
+
+    res.send({ items: items });
   } catch (e) {
     next({ message: e.stack });
     res.sendStatus(500);

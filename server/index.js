@@ -41,10 +41,25 @@ async function start() {
   });
 
   // Listen the server
-  app.listen(port, host);
+  const server = app.listen(port, host);
   consola.ready({
     message: `Server listening on http://${host}:${port}`,
     badge: true
+  });
+
+  const io = require("socket.io").listen(server);
+  io.on("connection", socket => {
+    socket.on("join", msg => {
+      socket.join(msg.id);
+      var room = io.sockets.adapter.rooms[msg.id];
+      const count = room.length;
+      io.to(msg.id).emit("connectionCount", { connectionCount: count });
+
+      socket.on("disconnect", () => {
+        const count = room.length;
+        io.to(msg.id).emit("connectionCount", { connectionCount: count });
+      });
+    });
   });
 }
 start();

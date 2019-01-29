@@ -129,6 +129,27 @@ db.writeToSheet = async (title, items) => {
     });
 };
 
+db.getUploadedCaptionSpreadsheetContent = async sheetName => {
+  if (!(await includesInUploadedCaptionSpreadsheet(sheetName))) {
+    return [];
+  }
+
+  return await promisify(sheets.spreadsheets.values.get.bind(sheets))({
+    spreadsheetId: uploadCaptionSpreadsheetId,
+    range: sheetName
+  }).then(res => {
+    return res.data.values.map(e => [Number(e[0]), Number(e[1]), e[2]]);
+  });
+};
+
+const includesInUploadedCaptionSpreadsheet = async sheetName => {
+  const res = await promisify(sheets.spreadsheets.get.bind(sheets))({
+    spreadsheetId: uploadCaptionSpreadsheetId
+  });
+
+  return res.data.sheets.some(e => e.properties.title === sheetName);
+};
+
 const channelIdToData = new Map();
 
 let videoSheetVersion;
