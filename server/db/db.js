@@ -91,23 +91,10 @@ db.createSheet = async title => {
         }
       ]
     }
-  })
-    .then(res => {
-      slack.say(`createSheet\r\n${JSON.stringify(res.data)}`);
-      return { result: "success" };
-    })
-    .catch(e => {
-      if (e.toString().includes("別の名前を入力してください")) {
-        slack.say(e.toString());
-        return {
-          result: "failed",
-          message: "この動画の字幕は既に存在しています"
-        };
-      } else {
-        slack.say(e.toString());
-        return { result: "failed", message: "不明なエラー" };
-      }
-    });
+  }).then(res => {
+    slack.say(`createSheet\r\n${JSON.stringify(res.data)}`);
+    return res.data;
+  });
 };
 
 db.writeToSheet = async (title, items) => {
@@ -118,15 +105,10 @@ db.writeToSheet = async (title, items) => {
     resource: {
       values: items
     }
-  })
-    .then(res => {
-      slack.say(`writeToSheet\r\n${JSON.stringify(res.data)}`);
-      return { result: "success" };
-    })
-    .catch(e => {
-      slack.say(e.toString());
-      return { result: "failed", message: "不明なエラー" };
-    });
+  }).then(res => {
+    slack.say(`writeToSheet\r\n${JSON.stringify(res.data)}`);
+    return res.data;
+  });
 };
 
 db.getUploadedCaptionSpreadsheetContent = async sheetName => {

@@ -11,26 +11,23 @@ const captionManager =
 
 router.post("/", async function(req, res, next) {
   try {
-    const reqJson = req.body;
-    let result = await db.createSheet(reqJson.videoId);
-    if (result.result !== "success") {
-      next({ message: result.message });
-      res.status(404).send(result.message);
-      return;
-    }
+    await db.createSheet(req.body.videoId);
+    await db.writeToSheet(req.body.videoId, req.body.items);
 
-    result = await db.writeToSheet(reqJson.videoId, reqJson.items);
-    if (result.result !== "success") {
-      next({ message: result.message });
-      res.status(404).send(result.message);
-      return;
-    }
+    slack.say(`<@${captionManager}> newSheet:${req.body.videoId}`);
 
-    slack.say(`<@${captionManager}> newSheet:${reqJson.videoId}`);
-
-    res.send(result);
+    res.send({ result: "success" });
   } catch (e) {
     next({ message: e.stack });
+
+    if (e.toString().includes("別の名前を入力してください")) {
+      res.status(409).send({
+        result: "failed",
+        message: "この動画の字幕は既に存在しています"
+      });
+      return;
+    }
+
     res.sendStatus(500);
   }
 });
