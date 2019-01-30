@@ -50,17 +50,29 @@
       </v-card>
     </v-dialog>
     <v-dialog
-      v-model="notifycanEditAtYoutubeDialog"
-      max-width="290"
+      v-model="notificationDialog"
+      max-width="400"
       persistent
     >
       <v-card>
-        <v-card-text>この動画の字幕はYouTubeでも編集できます</v-card-text>
+        <v-card-text>
+          <ul>
+            <li
+              v-for="(text, index) in notificationDialogTextaList"
+              :key="index"
+              style="margin-top:10px"
+            >
+              <strong>
+                {{ text }}
+              </strong>
+            </li>
+          </ul>
+        </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn
             flat="flat"
-            @click="notifycanEditAtYoutubeDialog = false"
+            @click="notificationDialog = false"
           >
             閉じる
           </v-btn>
@@ -536,7 +548,8 @@ export default {
       snackbarText: "",
       snackbarColor: "",
       progressDialog: false,
-      notifycanEditAtYoutubeDialog: false,
+      notificationDialog: false,
+      notificationDialogTextaList: [],
       confirmDialog: false,
       confirmDialogText: "",
       confirmDialogAcceptText: "",
@@ -545,25 +558,25 @@ export default {
       errorSnackbar: false,
       errorIndex: -1,
       socket: "",
-      connectionCount: 1
+      connectionCount: 1,
+      existsCaptionOnServer: false
     }
   },
   async asyncData({ params, query, $axios }) {
-    let notifycanEditAtYoutubeDialog = false;
-    if (query.status.includes("editable")) {
-      notifycanEditAtYoutubeDialog = true;
-    }
-
     const res = await $axios.$post("/api/edit/subtitle/get", { videoId: params.videoId });
     const subtitleList = [];
-    for (let i = 0; i < res.items.length; i++) {
-      subtitleList.push({ id: i, start: res.items[i][0], end: res.items[i][1], text: res.items[i][2] });
+    let existsCaptionOnServer = false;
+    if (res.items.length > 0) {
+      existsCaptionOnServer = true;
+      for (let i = 0; i < res.items.length; i++) {
+        subtitleList.push({ id: i, start: res.items[i][0], end: res.items[i][1], text: res.items[i][2] });
+      }
     }
 
     return {
       videoId: params.videoId,
-      notifycanEditAtYoutubeDialog: notifycanEditAtYoutubeDialog,
-      subtitleList: subtitleList
+      subtitleList: subtitleList,
+      existsCaptionOnServer: existsCaptionOnServer
     }
   },
   watch: {
@@ -609,6 +622,17 @@ export default {
   destroyed() {
     this.socket.disconnect();
     this.destroyed = true;
+  },
+  created() {
+    const messageList = [];
+    if (this.$route.query.status.includes("editable")) {
+      messageList.push("YouTubeに編集中の字幕がないか確認してください");
+    }
+    if (this.existsCaptionOnServer) {
+      messageList.push("アップロード済みの字幕が見つかりました");
+    }
+
+    this.showNotificationDialog(messageList);
   },
   mounted() {
     this.socket = io();
@@ -943,6 +967,14 @@ export default {
       this.errorIndex = errorIndex;
       this.snackbarText = message;
       this.errorSnackbar = true;
+    },
+    showNotificationDialog(messageList) {
+      if (messageList.length === 0) {
+        return;
+      }
+
+      this.notificationDialogTextaList = messageList;
+      this.notificationDialog = true;
     }
   }
 }
