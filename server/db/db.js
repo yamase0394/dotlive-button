@@ -343,9 +343,11 @@ db.getChannelList = function() {
 };
 
 db.searchSubtitle = async (searchText, page, itemPerPage) => {
-  const searchRegs = searchText.split(/\s+/).map(str => new RegExp(str, "i"));
+  const keywords = searchText.split(/\s+/);
   const items = await lock.acquire(Object.keys({ subtitles })[0], () => {
-    return subtitles.filter(e => searchRegs.every(reg => reg.test(e[2])));
+    return subtitles.filter(e =>
+      keywords.every(keyword => e[2].includes(keyword))
+    );
   });
   if (items.length === 0) {
     return [0, 1, []];
@@ -366,13 +368,15 @@ db.searchSubtitleFromChannel = async (
   page,
   itemPerPage
 ) => {
-  const searchRegs = searchText.split(/\s+/).map(str => new RegExp(str, "i"));
+  const keywords = searchText.split(/\s+/);
   const items = await lock.acquire(
     Object.keys({ channelIdToSubtitles })[0],
     () => {
       const target = channelIdToSubtitles.get(channelId);
       if (target) {
-        return target.filter(e => searchRegs.every(reg => reg.test(e[2])));
+        return target.filter(e =>
+          keywords.every(keyword => e[2].includes(keyword))
+        );
       } else {
         return [];
       }
