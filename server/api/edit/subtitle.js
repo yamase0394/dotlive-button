@@ -32,6 +32,30 @@ router.post("/", async function(req, res, next) {
   }
 });
 
+router.post("/update", async function(req, res, next) {
+  try {
+    const sheetName = `${req.body.videoId},2`;
+    await db.createSheet(sheetName);
+    await db.writeToSheet(sheetName, req.body.items);
+
+    slack.say(`<@${captionManager}> updateSheet:${sheetName}`);
+
+    res.send({ result: "success" });
+  } catch (e) {
+    next({ message: e.stack });
+
+    if (e.toString().includes("別の名前を入力してください")) {
+      res.status(409).send({
+        result: "failed",
+        message: "この動画の字幕は既に存在しています"
+      });
+      return;
+    }
+
+    res.sendStatus(500);
+  }
+});
+
 router.post("/get", async function(req, res, next) {
   try {
     const items = await db.getUploadedCaptionSpreadsheetContent(

@@ -13,7 +13,7 @@ youtubeClinet.getChannelInfo = async channelId => {
     part: "snippet",
     id: channelId
   }).catch(e => {
-    new Error(JSON.stringify(e.errors));
+    throw new Error(JSON.stringify(e.errors));
   });
 
   return res.data.items;

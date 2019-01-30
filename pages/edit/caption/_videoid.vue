@@ -51,7 +51,7 @@
     </v-dialog>
     <v-dialog
       v-model="notificationDialog"
-      max-width="400"
+      max-width="420"
       persistent
     >
       <v-card>
@@ -118,22 +118,19 @@
       height="38px"
     >
       <v-toolbar-items>
-        <v-tooltip bottom>
-          <v-chip
-            slot="activator"
-            class="connectionCount"
-            disabled
-            :color="connectionCount === 1 ? 'grey darken-4': 'red'"
-            text-color="white"
-            label
-          >
-            <v-avatar>
-              <v-icon>account_circle</v-icon>
-            </v-avatar>
-            {{ connectionCount }}
-          </v-chip>
-          <span>このページを見ている人の数</span>
-        </v-tooltip>
+        <v-chip
+          slot="activator"
+          class="connectionCount"
+          disabled
+          :color="connectionCount === 1 ? 'grey darken-4': 'red'"
+          text-color="white"
+          label
+        >
+          <v-avatar>
+            <v-icon>account_circle</v-icon>
+          </v-avatar>
+          {{ connectionCount }}人がこのページを見ています
+        </v-chip>
       </v-toolbar-items>
       <v-spacer />
       <v-toolbar-items>
@@ -626,10 +623,7 @@ export default {
   created() {
     const messageList = [];
     if (this.$route.query.status.includes("editable")) {
-      messageList.push("YouTubeに編集中の字幕がないか確認してください");
-    }
-    if (this.existsCaptionOnServer) {
-      messageList.push("アップロード済みの字幕が見つかりました");
+      messageList.push("重複して編集してしまう可能性があるので、YouTubeに編集中の字幕がないか確認してください");
     }
 
     this.showNotificationDialog(messageList);
@@ -865,14 +859,14 @@ export default {
           output.push([subtitle.start, subtitle.end - subtitle.start, subtitle.text]);
         });
 
-        await this.$axios.$post("/api/edit/subtitle", {
+        await this.$axios.$post(`/api/edit/subtitle${this.existsCaptionOnServer ? "/update" : ""}`, {
           videoId: this.videoId,
           items: output
         }).then(res => {
           this.showSuccessSnackbar("アップロード完了");
         }).catch(error => {
           console.log(error.response.data);
-          this.showErrorSnackbar(`アップロード失敗${error.response.data}`);
+          this.showErrorSnackbar(`アップロード失敗${error.response.data.message}`);
         });
       } else {
         filteredSubtitleList.forEach(e => {
