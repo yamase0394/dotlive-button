@@ -80,34 +80,6 @@
             <v-tooltip top>
               <v-btn
                 slot="activator"
-                v-clipboard:copy="shareUrl"
-                v-clipboard:success="onCopy"
-                v-clipboard:error="onCopyError"
-                depressed
-                class="small-button"
-              >
-                <v-icon small>
-                  file_copy
-                </v-icon>
-              </v-btn>
-              <span>URLをクリップボードに貼り付ける</span>
-            </v-tooltip>
-            <v-tooltip top>
-              <v-btn
-                slot="activator"
-                depressed
-                class="small-button"
-                @click="openVideoInNewTab"
-              >
-                <v-icon small>
-                  movie
-                </v-icon>
-              </v-btn>
-              <span>YouTubeで開く</span>
-            </v-tooltip>
-            <v-tooltip top>
-              <v-btn
-                slot="activator"
                 :to="`/video/${videoId}?start=${start}&end=${end}${isAsr ? '&show=asr' :''}`"
                 class="small-button"
                 depressed
@@ -117,6 +89,34 @@
                 </v-icon>
               </v-btn>
               <span>動画ページを開く</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <v-btn
+                slot="activator"
+                depressed
+                color="#FF0000"
+                class="small-button"
+                @click="openVideoInNewTab"
+              >
+                <v-icon small>
+                  fab fa-youtube
+                </v-icon>
+              </v-btn>
+              <span>YouTubeで開く</span>
+            </v-tooltip>
+            <v-tooltip top>
+              <v-btn
+                slot="activator"
+                depressed
+                class="small-button"
+                color="#00aced"
+                @click="openTwitterSharePage"
+              >
+                <v-icon small>
+                  fab fa-twitter
+                </v-icon>
+              </v-btn>
+              <span>Twitterで共有する</span>
             </v-tooltip>
           </v-card-actions>
           <div class="subscribe">
@@ -132,24 +132,15 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-    <v-snackbar
-      v-model="snackbar"
-      :timeout="2000"
-      top
-    >
-      {{ snackbarText }}
-    </v-snackbar>
   </v-layout>
 </template>
 
 <script>
 import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
-import VueClipboard from 'vue-clipboard2'
 import AsyncLock from "async-lock";
 
 Vue.use(VueYoutube)
-Vue.use(VueClipboard)
 
 const lock = new AsyncLock();
 const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
@@ -185,8 +176,6 @@ export default {
       title: "",
       publishedAt: "",
       channelId: "",
-      snackbar: false,
-      snackbarText: "",
       isLoop: true,
       player_vars: { start: Math.floor(this.start), rel: 0 },
       youTubeUrl: `https://youtu.be/${this.videoId}?start=${Math.floor(this.start)}&end=${Math.ceil(this.end)}`,
@@ -243,16 +232,12 @@ export default {
     close() {
       this.dialog = false;
     },
-    onCopy() {
-      this.snackbarText = "クリップボードにコピーしました";
-      this.snackbar = true;
-    },
-    onCopyError() {
-      this.snackbarText = "コピーに失敗しました";
-      this.snackbar = true;
-    },
     openVideoInNewTab() {
       window.open(this.youTubeUrl);
+      this.$refs.youtube.player.pauseVideo();
+    },
+    openTwitterSharePage() {
+      window.open(`https://twitter.com/share?url=${encodeURIComponent(this.shareUrl)}&text=${encodeURIComponent(this.decodeHTML((this.text + ' - ' + this.title).replace(/\r?\n/g, ' ')))}&hashtags=dotlive_button`);
       this.$refs.youtube.player.pauseVideo();
     },
     async playingVideo() {
@@ -288,6 +273,9 @@ export default {
         }
         await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
       });
+    },
+    decodeHTML(str) {
+      return str.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, '\'').replace(/&#044;/g, ',').replace(/&amp;/g, '&');
     }
   },
 };

@@ -129,13 +129,28 @@
                       slot="activator"
                       class="small-button"
                       depressed
+                      color="#FF0000"
                       @click="openVideoInNewTab"
                     >
                       <v-icon small>
-                        movie
+                        fab fa-youtube
                       </v-icon>
                     </v-btn>
                     <span>YouTubeで開く</span>
+                  </v-tooltip>
+                  <v-tooltip top>
+                    <v-btn
+                      slot="activator"
+                      depressed
+                      class="small-button"
+                      color="#00aced"
+                      @click="openTwitterSharePage"
+                    >
+                      <v-icon small>
+                        fab fa-twitter
+                      </v-icon>
+                    </v-btn>
+                    <span>Twitterで共有する</span>
                   </v-tooltip>
                 </v-flex>
               </v-layout>
@@ -459,6 +474,10 @@ export default {
       window.open(this.videoUrl);
       this.$refs.youtube.player.pauseVideo();
     },
+    openTwitterSharePage() {
+      window.open(`https://twitter.com/share?url=${encodeURIComponent(this.shareUrl)}&text=${encodeURIComponent(this.decodeHTML((this.selectedText + ' - ' + this.videoTitle).replace(/\r?\n/g, ' ')))}&hashtags=dotlive_button`);
+      this.$refs.youtube.player.pauseVideo();
+    },
     async sendPlayCount() {
       if (!this.selectedId || lock.isBusy(`${this.start}${this.end}${this.selectedText}`)) {
         return;
@@ -486,6 +505,9 @@ export default {
         }
         await sleep(Math.max((this.end - this.start) * 1000 - 200, 0));
       });
+    },
+    decodeHTML(str) {
+      return str.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, '\'').replace(/&#044;/g, ',').replace(/&amp;/g, '&');
     }
   },
 }
