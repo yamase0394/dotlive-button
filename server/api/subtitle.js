@@ -22,10 +22,9 @@ router.post("/", async function(req, res, next) {
         };
         break;
       case "video":
-        let subsFilteredByVideoId = await db.getSubtitleByVideoId(req.body.id);
-        if (subsFilteredByVideoId.length === 0) {
-          subsFilteredByVideoId = await captionAsr.seachByVideoId(req.body.id);
-        }
+        const subsFilteredByVideoId = await db.getSubtitleByVideoId(
+          req.body.id
+        );
         resJson = { items: subsFilteredByVideoId };
         break;
       case "channel":
@@ -46,6 +45,25 @@ router.post("/", async function(req, res, next) {
       case "random":
         const randomSubs = await db.getRandomSubtitles(RANDOM_ITEM_COUNT);
         resJson = { items: randomSubs };
+        break;
+    }
+
+    res.send(resJson);
+  } catch (e) {
+    next({ message: e.stack });
+    res.sendStatus(500);
+  }
+});
+
+router.post("/asr", async function(req, res, next) {
+  try {
+    let resJson;
+    switch (req.body.type) {
+      case "video":
+        const subsFilteredByVideoId = await captionAsr.seachByVideoId(
+          req.body.id
+        );
+        resJson = { items: subsFilteredByVideoId };
         break;
     }
 

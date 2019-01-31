@@ -108,7 +108,7 @@
             <v-tooltip top>
               <v-btn
                 slot="activator"
-                :to="`/video/${videoId}?start=${start}&end=${end}`"
+                :to="`/video/${videoId}?start=${start}&end=${end}${isAsr ? '&show=asr' :''}`"
                 class="small-button"
                 depressed
               >
@@ -190,7 +190,7 @@ export default {
       isLoop: true,
       player_vars: { start: Math.floor(this.start), rel: 0 },
       youTubeUrl: `https://youtu.be/${this.videoId}?start=${Math.floor(this.start)}&end=${Math.ceil(this.end)}`,
-      shareUrl: `${location.protocol}//${location.host}/video/${this.videoId}?start=${this.start}&end=${this.end}`,
+      shareUrl: "",
       isFirstPlay: true,
       isAsr: false
     };
@@ -226,7 +226,7 @@ export default {
       };
       loop.bind(this)();
     },
-    async open() {
+    async open(type) {
       await this.$axios.$post(`/api/video`,
         {
           id: this.videoId,
@@ -236,10 +236,8 @@ export default {
           this.publishedAt = new Date(res.items[2]).toLocaleString();
           this.title = res.items[3];
           this.dialog = true;
-          this.isAsr = res.items[6].includes("asr");
-        }).catch(e => {
-          console.log(e);
-          window.open(this.youTubeUrl);
+          this.isAsr = type === "asr";
+          this.shareUrl = `${location.protocol}//${location.host}/video/${this.videoId}?start=${this.start}&end=${this.end}${this.isAsr ? "&show=asr" : ""}`
         });
     },
     close() {

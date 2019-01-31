@@ -1,9 +1,19 @@
 export const state = () => ({
-  isAsrFilter: false
+  isAsrFilter: false,
+  captionFilter: ""
 });
 
 export const mutations = {
-  isAsrFilter: (state, captionStatus) => {
-    state.isAsrFilter = captionStatus === "asr";
+  captionFilter: (state, captionFilter) => {
+    state.captionFilter = captionFilter;
+  }
+};
+
+export const getters = {
+  isAsrFilter: state => {
+    return state.captionFilter === "asr";
+  },
+  isPartialFilter: state => {
+    return state.captionFilter === "partial";
   }
 };

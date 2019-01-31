@@ -171,6 +171,7 @@ export default {
 
     const captionStatusToFilterItems = {
       "uploaded,dotlive_button": "あり",
+      "partial": "一部のみ",
       "asr": "自動生成",
       "editable": "編集可",
       "not_permitted": "編集不可",
@@ -253,7 +254,7 @@ export default {
     store.commit("search/target", "video");
     store.commit("search/keyword", query.keyword ? query.keyword : "");
     store.commit("search/channelIdFilter", query.channel ? query.channel : "");
-    store.commit("videoListPage/isAsrFilter", query.caption);
+    store.commit("videoListPage/captionFilter", query.caption);
   },
   watch: {
     "$route": async function (to, from) {
@@ -291,7 +292,7 @@ export default {
         this.filter.caption = "あり";
         temp = temp.filter(e => ["uploaded", "dotlive_button"].some(cond => e[videoSheetColumn.STATUS].includes(cond)));
       }
-      this.$store.commit("videoListPage/isAsrFilter", to.query.caption);
+      this.$store.commit("videoListPage/captionFilter", to.query.caption);
 
       this.infiniteId++;
       this.filteredItems = temp;

@@ -133,6 +133,7 @@ export default {
 
       sessionStorage.setItem(SESSION_STORAGE_VIDEO_DATA_VERSION, res.version);
       sessionStorage.setItem(SESSION_STORAGE_VIDEO_DATA, JSON.stringify(res.items));
+      sessionStorage.removeItem(SESSION_STORAGE_DISPLAY_ITEMS);
       return res.items;
     }).catch(e => {
       this.$nuxt.error({ statusCode: 404, message: 'Page not found' });
@@ -159,6 +160,7 @@ export default {
 
     const captionStatusToFilterItems = {
       "uploaded,dotlive_button": "あり",
+      "partial": "一部のみ",
       "asr": "自動生成",
       "editable": "編集可",
       "not_permitted": "編集不可",
@@ -219,7 +221,7 @@ export default {
     }
   },
   fetch({ store, query }) {
-    store.commit("videoListPage/isAsrFilter", query.caption);
+    store.commit("videoListPage/captionFilter", query.caption);
     store.commit("search/channelIdFilter", query.channel ? query.channel : "");
     store.commit("search/captionStatusFilter", query.caption ? query.caption : "");
   },
@@ -249,7 +251,7 @@ export default {
 
       this.$store.commit("search/channelIdFilter", to.query.channel ? to.query.channel : "");
       this.$store.commit("search/captionStatusFilter", to.query.caption ? to.query.caption : "");
-      this.$store.commit("videoListPage/isAsrFilter", to.query.caption);
+      this.$store.commit("videoListPage/captionFilter", to.query.caption);
 
       this.infiniteId++;
       this.displayItems = this.filteredItems.slice(0, Math.min(ITEM_PER_PAGE, this.filteredItems.length));

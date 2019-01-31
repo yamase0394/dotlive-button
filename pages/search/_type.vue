@@ -42,6 +42,7 @@
                 :text="(item[2])"
                 :video-id="item[4]"
                 :avater-url="channelIdToThumb[item[3]]"
+                :type="type"
                 @btnClickedEvent="onVoiceCardBtnClicked"
               />
             </v-flex>
@@ -79,6 +80,7 @@ export default {
       filter: null,
       selectedVoiceCard: "-1",
       resultCount: 0,
+      type: "button"
     }
   },
   async asyncData({ params, query, error, $axios }) {
@@ -135,7 +137,8 @@ export default {
       channelIdToName: channelIdToName,
       channelNameToId: channelNameToId,
       channelFilterItems: channelFilterItems,
-      filter: filter
+      filter: filter,
+      type: params.type
     };
   },
   fetch({ store, params, query }) {

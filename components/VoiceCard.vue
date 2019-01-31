@@ -80,6 +80,10 @@ export default {
     id: {
       type: String,
       required: true
+    },
+    type: {
+      type: String,
+      default: "button"
     }
   },
   data() {
@@ -89,10 +93,14 @@ export default {
   },
   methods: {
     open() {
-      this.$refs.youtubeDialogDetail.open();
+      this.$refs.youtubeDialogDetail.open(this.type);
     },
     openDetail() {
-      this.$router.push(`/video/${this.videoId}?start=${this.start}&end=${this.end}`);
+      if (this.type === "asr") {
+        this.$router.push(`/video/${this.videoId}?start=${this.start}&end=${this.end}&show=asr`);
+      } else {
+        this.$router.push(`/video/${this.videoId}?start=${this.start}&end=${this.end}`);
+      }
     },
     select(isSelected) {
       this.isSelected = isSelected;

@@ -21,21 +21,31 @@
             row
             wrap
           >
-            <v-flex>
-              <v-btn-toggle v-model="repeats">
-                <v-tooltip bottom>
-                  <v-btn
-                    slot="activator"
-                    :value="true"
-                    class="toggele__btn"
-                    flat
-                  >
-                    <v-icon>loop</v-icon>
-                  </v-btn>
-                  <span>指定範囲をリピート再生する</span>
-                </v-tooltip>
-              </v-btn-toggle>
-            </v-flex>
+            <v-layout row>
+              <v-flex>
+                <v-btn-toggle v-model="repeats">
+                  <v-tooltip bottom>
+                    <v-btn
+                      slot="activator"
+                      :value="true"
+                      class="toggele__btn"
+                      flat
+                    >
+                      <v-icon>loop</v-icon>
+                    </v-btn>
+                    <span>指定範囲をリピート再生する</span>
+                  </v-tooltip>
+                </v-btn-toggle>
+              </v-flex>
+              <v-flex v-if="isPartial">
+                <v-switch
+                  v-model="showsAsr"
+                  class="v-swich--show-asr"
+                  label="自動生成"
+                  color="blue darken-2"
+                />
+              </v-flex>
+            </v-layout>
             <v-flex xs12>
               <v-responsive :aspect-ratio="16/9">
                 <youtube
@@ -230,6 +240,7 @@ const lock = new AsyncLock();
 const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
 
 export default {
+  watchQuery: [],
   components: {
     SimpleVoiceCard
   },
@@ -255,27 +266,18 @@ export default {
       snackbar: false,
       snackbarText: "",
       shareUrl: "",
-      isAsr: false
+      isAsr: false,
+      isPartial: false,
+      showsAsr: false,
+      hiddenSubtitles: []
     }
   },
   async asyncData({ params, query, error, $axios }) {
+    console.log("asyncData");
     let selectedText = "未選択";
     let selectedId = "";
     const start = Number(query.start);
     const end = Number(query.end);
-
-    const resSub = await $axios.$post("/api/subtitle", { id: params.videoId, type: "video" });
-    if (resSub.items.length <= 0) {
-      error({ statusCode: 404, message: "字幕データがまだありません" });
-      return;
-    }
-    for (const element of resSub.items) {
-      if (start == Number(element[0]) && end == (Number(element[1]) * 1000 + Number(element[0]) * 1000) / 1000) {
-        selectedText = element[2];
-        selectedId = element[5];
-        break;
-      }
-    }
 
     const resVideo = await $axios.$post("/api/video", {
       id: params.videoId,
@@ -285,7 +287,32 @@ export default {
     });
     if (resVideo.status !== 200) {
       error("aa");
-      return;
+    }
+
+    let subtitles = (await $axios.$post("/api/subtitle", { id: params.videoId, type: "video" })).items;
+
+    const isAsr = resVideo.items[6].includes("asr");
+    const subtitlesAsr = isAsr ? (await $axios.$post("/api/subtitle/asr", { id: params.videoId, type: "video" })).items : [];
+
+    const isPartial = resVideo.items[6].includes("partial");
+    const showsAsr = query.show === "asr"
+    let filteredSubtitles;
+    let hiddenSubtitles;
+    if (isPartial && !showsAsr || !isAsr) {
+      filteredSubtitles = subtitles;
+      hiddenSubtitles = subtitlesAsr;
+    } else {
+      hiddenSubtitles = subtitles;
+      subtitles = subtitlesAsr;
+      filteredSubtitles = subtitlesAsr;
+    }
+
+    for (const element of subtitles) {
+      if (start == Number(element[0]) && end == (Number(element[1]) * 1000 + Number(element[0]) * 1000) / 1000) {
+        selectedText = element[2];
+        selectedId = element[5];
+        break;
+      }
     }
 
     let videoUrl;
@@ -306,23 +333,42 @@ export default {
     } else {
       shareUrl = `${location.protocol}//${location.host}/video/${videoId}?start=${start}&end=${end}`
     }
+    shareUrl += showsAsr ? "&show=asr" : "";
 
     return {
-      subtitles: resSub.items,
+      subtitles: subtitles,
+      filteredSubtitles: filteredSubtitles,
+      hiddenSubtitles: hiddenSubtitles,
       channelId: resVideo.items[0],
       videoId: videoId,
       publishedAt: resVideo.items[2],
       videoTitle: resVideo.items[3],
       videoDescription: resVideo.items[4],
-      filteredSubtitles: resSub.items,
       start: start,
       end: end,
       videoUrl: videoUrl,
       shareUrl: shareUrl,
       selectedText: selectedText,
       selectedId: selectedId,
-      isAsr: resVideo.items[6].includes("asr")
+      isAsr: isAsr,
+      isPartial: isPartial,
+      showsAsr: showsAsr
     };
+  },
+  watch: {
+    showsAsr(showsAsr) {
+      this.$router.replace({ query: showsAsr ? { show: "asr" } : {} });
+      const temp = this.subtitles;
+      this.subtitles = this.hiddenSubtitles;
+      this.hiddenSubtitles = temp;
+      this.filterSubtitle();
+      this.selectedId = "-1";
+      this.start = null;
+      this.end = null;
+      this.selectedText = "未選択";
+      this.videoUrl = `https://youtu.be/${this.videoId}`;
+      this.shareUrl = `${location.protocol}//${location.host}/video/${this.videoId}${showsAsr ? "?show=asr" : ""}`;
+    }
   },
   mounted() {
     this.$refs.scrollableSubLayout.addEventListener("wheel", this.onScroll);
@@ -344,14 +390,18 @@ export default {
       }
     },
     async onVoiceBtnClicked(id, start, end, text) {
-      this.$router.replace(`/video/${this.videoId}?start=${start}&end=${end}`);
+      const query = { start: start, end: end }
+      if (this.showsAsr) {
+        query.show = "asr";
+      }
+      this.$router.replace({ query: query });
       this.$refs.youtube.player.seekTo(start, true);
       this.selectedId = id;
       this.start = start;
       this.end = end;
       this.selectedText = text;
       this.videoUrl = `https://youtu.be/${this.videoId}?start=${Math.floor(start)}&end=${Math.ceil(end)}`;
-      this.shareUrl = `${location.protocol}//${location.host}/video/${this.videoId}?start=${start}&end=${end}`;
+      this.shareUrl = `${location.protocol}//${location.host}/video/${this.videoId}?start=${start}&end=${end}${this.showsAsr ? "&show=asr" : ""}`;
 
       await this.sendPlayCount();
     },
@@ -415,7 +465,7 @@ export default {
       }
 
       await lock.acquire(`${this.start}${this.end}${this.selectedText}`, async () => {
-        if (this.isAsr) {
+        if ((this.showsAsr && this.isPartial) || (this.isAsr && !this.isPartial)) {
           this.$axios({
             method: "POST",
             url: "/api/update/count/asr",
@@ -518,5 +568,21 @@ export default {
 }
 .no-padding {
   padding: 0 !important;
+}
+.v-swich--show-asr {
+  margin-left: 10px;
+}
+.v-swich--show-asr .v-messages {
+  min-height: 0;
+}
+.v-swich--show-asr .v-input__slot {
+  margin-bottom: 0;
+}
+.v-swich--show-asr.v-input--selection-controls:not(.v-input--hide-details)
+  .v-input__slot {
+  margin-bottom: 0;
+}
+.v-swich--show-asr.v-input--selection-controls {
+  margin-top: 0;
 }
 </style>

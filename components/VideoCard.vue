@@ -70,14 +70,17 @@ export default {
   },
   methods: {
     onCardClicked() {
-      if (["uploaded", "dotlive_button", "can_upload", "waiting_ack"].some(e => e === this.captionStatus)) {
+      if (["uploaded", "dotlive_button"].some(e => e === this.captionStatus) ||
+        (this.$store.getters["videoListPage/isPartialFilter"] && this.captionStatus.includes("partial"))) {
         this.$router.push(`/video/${this.videoId}`);
-      } else if (["editable", "not_permitted"].some(e => this.captionStatus.includes(e))) {
-        if (this.$store.state.videoListPage.isAsrFilter) {
-          this.$router.push(`/video/${this.videoId}`);
+      } else if (this.$store.getters["videoListPage/isAsrFilter"] && this.captionStatus.includes("asr")) {
+        if (this.captionStatus.includes("partial")) {
+          this.$router.push(`/video/${this.videoId}?show=asr`);
         } else {
-          this.$router.push({ path: `/edit/caption/${this.videoId}`, query: { status: this.captionStatus } });
+          this.$router.push(`/video/${this.videoId}`);
         }
+      } else if (["editable", "not_permitted"].some(e => this.captionStatus.includes(e))) {
+        this.$router.push({ path: `/edit/caption/${this.videoId}`, query: { status: this.captionStatus } });
       }
     }
   }
