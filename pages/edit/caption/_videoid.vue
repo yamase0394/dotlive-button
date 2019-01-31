@@ -570,7 +570,8 @@ export default {
     if (res.items.length > 0) {
       existsCaptionOnServer = true;
       for (let i = 0; i < res.items.length; i++) {
-        subtitleList.push({ id: i, start: res.items[i][0], end: res.items[i][1], text: res.items[i][2] });
+        const end = (Number(res.items[i][0]) * 1000 + Number(res.items[i][1]) * 1000) / 1000
+        subtitleList.push({ id: i, start: res.items[i][0], end: end, text: res.items[i][2] });
       }
     }
 
