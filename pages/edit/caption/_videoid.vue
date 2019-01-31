@@ -921,6 +921,9 @@ export default {
         try {
           this.$nextTick(() => {
             this.subtitleList = parseSRT(reader.result);
+            this.subtitleList.forEach(e => {
+              e.text = e.text.replace(/<br \/>/g, "\n");
+            })
             this.selectedId = -1;
             this.selectedSubtitleVer++;
             this.sortAndCheckOrder();
