@@ -81,7 +81,7 @@
     </v-dialog>
     <v-dialog
       v-model="confirmDialog"
-      max-width="290"
+      max-width="420"
     >
       <v-card>
         <v-card-text>{{ confirmDialogText }}</v-card-text>
@@ -940,7 +940,7 @@ export default {
     },
     uploadButtonClicked() {
       this.showConfirmDialog(
-        "字幕をどっとライブボタンにアップロードします",
+        "字幕を.LIVEボタンにアップロードします。字幕が承認されるまでアップロードができなくなるので注意してください。",
         "アップロード",
         this.uploadSubtitle,
         "green darken-1"
