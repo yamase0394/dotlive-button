@@ -8,7 +8,7 @@ module.exports = {
    ** Headers of the page
    */
   head: {
-    title: ".LIVE（どっとライブ） ボタン",
+    title: ".LIVE（どっとライブ）ボタン",
     meta: [
       { charset: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -16,7 +16,28 @@ module.exports = {
         name: "google-site-verification",
         content: "_F8d3yO1Ps19OlqCK_Qbg7W1MqPbf5m9dL6xSU6R3uI"
       },
-      { hid: "description", name: "description", content: pkg.description }
+      { hid: "description", name: "description", content: pkg.description },
+      {
+        hid: "og:title",
+        property: "og:title",
+        content: ".LIVE（どっとライブ）ボタン"
+      },
+      {
+        hid: "og:site_name",
+        property: "og:site_name",
+        content: ".LIVE（どっとライブ）ボタン"
+      },
+      {
+        hid: "og:description",
+        property: "og:description",
+        content: pkg.description
+      },
+      {
+        hid: "og:url",
+        property: "og:url",
+        content: "https://dotlivebutton.herokuapp.com/button"
+      },
+      { name: "twitter:card", content: "summary" }
     ],
     link: [
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
