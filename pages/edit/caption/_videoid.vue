@@ -563,7 +563,8 @@ export default {
     }
   },
   async asyncData({ params, query, $axios }) {
-    const res = await $axios.$post("/api/edit/subtitle/get", { videoId: params.videoId });
+    console.log(params);
+    const res = await $axios.$post("/api/edit/subtitle/get", { videoId: params.videoid });
     const subtitleList = [];
     let existsCaptionOnServer = false;
     if (res.items.length > 0) {
@@ -574,7 +575,7 @@ export default {
     }
 
     return {
-      videoId: params.videoId,
+      videoId: params.videoid,
       subtitleList: subtitleList,
       existsCaptionOnServer: existsCaptionOnServer
     }
