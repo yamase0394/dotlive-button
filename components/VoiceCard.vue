@@ -16,8 +16,12 @@
           :class="[isSelected ?'selected-card': 'not-selected-card']"
           depressed
           @click="open(); btnClicked();"
-          v-html="text"
-        />
+        >
+          <span
+            class="text-none"
+            v-html="text"
+          />
+        </v-btn>
         <span>ポップアップで再生</span>
       </v-tooltip>
       <v-tooltip

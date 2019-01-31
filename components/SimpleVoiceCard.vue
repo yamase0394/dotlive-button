@@ -5,8 +5,12 @@
                'simple-voice-card-btn']"
       depressed
       @click="onClicked"
-      v-html="text"
-    />
+    >
+      <span
+        class="text-none"
+        v-html="text"
+      />
+    </v-btn>
   </v-card>
 </template>
 
