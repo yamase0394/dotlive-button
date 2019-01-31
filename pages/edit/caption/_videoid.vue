@@ -118,19 +118,22 @@
       height="38px"
     >
       <v-toolbar-items>
-        <v-chip
-          slot="activator"
-          class="connectionCount"
-          disabled
-          :color="connectionCount === 1 ? 'grey darken-4': 'red'"
-          text-color="white"
-          label
-        >
-          <v-avatar>
-            <v-icon>account_circle</v-icon>
-          </v-avatar>
-          {{ connectionCount }}人がこのページを見ています
-        </v-chip>
+        <v-tooltip bottom>
+          <v-chip
+            slot="activator"
+            class="connectionCount"
+            disabled
+            :color="connectionCount === 1 ? 'grey darken-4': 'red'"
+            text-color="white"
+            label
+          >
+            <v-avatar>
+              <v-icon>account_circle</v-icon>
+            </v-avatar>
+            {{ connectionCount }}人がこのページを見ています
+          </v-chip>
+          <span>2人以上いる場合、重複して編集している可能性があるので注意してください</span>
+        </v-tooltip>
       </v-toolbar-items>
       <v-spacer />
       <v-toolbar-items>
@@ -846,6 +849,12 @@ export default {
     async uploadSubtitle() {
       this.progressDialog = true;
 
+      if (this.subtitleList.length === 0) {
+        this.showErrorSnackbar("字幕がありません");
+        this.progressDialog = false;
+        return;
+      }
+
       this.sortAndCheckOrder();
       if (this.subtitleList.find(e => e.hasError)) {
         this.progressDialog = false;
@@ -887,6 +896,16 @@ export default {
       return ("0".repeat(count) + target).slice(count * -1);
     },
     showPickSubRipFileDialog() {
+      if (this.subtitleList.length > 0) {
+        this.showConfirmDialog(
+          "現在編集中の字幕は上書きされます",
+          "詠み込む",
+          () => this.$refs.pickFile.click(),
+          "red darken-1"
+        );
+        return;
+      }
+
       this.$refs.pickFile.click();
     },
     onSubRipFilePicked(event) {
@@ -918,18 +937,20 @@ export default {
       });
     },
     uploadButtonClicked() {
-      this.confirmDialogText = "字幕をどっとライブボタンにアップロードします";
-      this.confirmDialogAcceptText = "アップロード";
-      this.confirmDialogAcceptFunction = this.uploadSubtitle;
-      this.confirmDialogAceeptButtonColor = "green darken-1";
-      this.confirmDialog = true;
+      this.showConfirmDialog(
+        "字幕をどっとライブボタンにアップロードします",
+        "アップロード",
+        this.uploadSubtitle,
+        "green darken-1"
+      );
     },
     deleteAllButtonClicked() {
-      this.confirmDialogText = "編集中の字幕をすべて削除します";
-      this.confirmDialogAcceptText = "削除";
-      this.confirmDialogAcceptFunction = this.deleteAllSubtitle;
-      this.confirmDialogAceeptButtonColor = "red darken-1";
-      this.confirmDialog = true;
+      this.showConfirmDialog(
+        "編集中の字幕をすべて削除します",
+        "削除",
+        this.deleteAllSubtitle,
+        "red darken-1"
+      );
     },
     deleteAllSubtitle() {
       this.subtitleList = [];
@@ -969,6 +990,13 @@ export default {
 
       this.notificationDialogTextaList = messageList;
       this.notificationDialog = true;
+    },
+    showConfirmDialog(message, acceptButtonText, onAcceptedFunction, acceptButtionColor) {
+      this.confirmDialogText = message;
+      this.confirmDialogAcceptText = acceptButtonText;
+      this.confirmDialogAcceptFunction = onAcceptedFunction;
+      this.confirmDialogAceeptButtonColor = acceptButtionColor;
+      this.confirmDialog = true;
     }
   }
 }
