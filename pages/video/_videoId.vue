@@ -22,21 +22,6 @@
             wrap
           >
             <v-layout row>
-              <v-flex>
-                <v-btn-toggle v-model="repeats">
-                  <v-tooltip bottom>
-                    <v-btn
-                      slot="activator"
-                      :value="true"
-                      class="toggele__btn"
-                      flat
-                    >
-                      <v-icon>loop</v-icon>
-                    </v-btn>
-                    <span>指定範囲をリピート再生する</span>
-                  </v-tooltip>
-                </v-btn-toggle>
-              </v-flex>
               <v-flex v-if="isPartial">
                 <v-switch
                   v-model="showsAsr"
@@ -81,7 +66,30 @@
             <v-layout
               xs12
               column
+              style="margin-left: 10px"
             >
+              <v-layout row>
+                <v-flex>
+                  <v-btn-toggle v-model="repeats">
+                    <v-btn
+                      :value="true"
+                      class="toggele__btn"
+                      depressed
+                    >
+                      <v-icon>loop</v-icon>
+                      <span>リピート</span>
+                    </v-btn>
+                  </v-btn-toggle>
+                </v-flex>
+                <v-flex>
+                  <v-btn
+                    class="button--edit small-button"
+                    @click="onSelectCurrentTimeButtonClicked"
+                  >
+                    現在の再生位置にあるボタンを選択
+                  </v-btn>
+                </v-flex>
+              </v-layout>
               <v-flex
                 class="video-info-container"
                 xs12
@@ -241,6 +249,7 @@
                   >
                     <simple-voice-card
                       :id="item[5]"
+                      :ref="item[5]"
                       :start="Number(item[0])"
                       :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
                       :text="item[2]"
@@ -264,7 +273,21 @@ import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
 import VueClipboard from 'vue-clipboard2'
 import AsyncLock from "async-lock";
+import VueScrollTo from "vue-scrollto";
 
+Vue.use(VueScrollTo, {
+  container: ".flex-scrollable",
+  duration: 500,
+  easing: "ease",
+  offset: -100,
+  force: true,
+  cancelable: true,
+  onStart: false,
+  onDone: false,
+  onCancel: false,
+  x: false,
+  y: true
+})
 Vue.use(VueYoutube)
 Vue.use(VueClipboard)
 
@@ -399,7 +422,7 @@ export default {
       this.subtitles = this.hiddenSubtitles;
       this.hiddenSubtitles = temp;
       this.filterSubtitle();
-      this.selectedId = "-1";
+      this.selectedId = "";
       this.start = null;
       this.end = null;
       this.selectedText = "未選択";
@@ -408,6 +431,10 @@ export default {
     }
   },
   mounted() {
+    if (this.selectedId) {
+      this.$scrollTo(this.$refs[this.selectedId][0].$el);
+    }
+
     this.$refs.scrollableSubLayout.addEventListener("wheel", this.onScroll);
     this.repeat();
   },
@@ -533,6 +560,17 @@ export default {
     },
     decodeHTML(str) {
       return str.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#039;/g, '\'').replace(/&#044;/g, ',').replace(/&amp;/g, '&');
+    },
+    async onSelectCurrentTimeButtonClicked() {
+      const currentTime = await this.$refs.youtube.player.getCurrentTime();
+      const targetIndex = this.subtitles.findIndex(e => Number(e[0]) <= currentTime && currentTime < (Number(e[0]) * 1000 + Number(e[1]) * 1000) / 1000);
+      if (targetIndex === -1) {
+        return;
+      }
+
+      const target = this.subtitles[targetIndex];
+      this.onVoiceBtnClicked(target[5], Number(target[0]), (Number(target[0]) * 1000 + Number(target[1]) * 1000) / 1000, target[2]);
+      this.$scrollTo(this.$refs[target[5]][0].$el);
     }
   },
 }

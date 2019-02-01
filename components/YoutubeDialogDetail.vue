@@ -15,21 +15,6 @@
           height="36px"
           flat
         >
-          <v-btn-toggle
-            v-model="isLoop"
-            class="transparent"
-          >
-            <v-tooltip bottom>
-              <v-btn
-                slot="activator"
-                :value="true"
-                flat
-              >
-                <v-icon>loop</v-icon>
-              </v-btn>
-              <span>リピート再生する</span>
-            </v-tooltip>
-          </v-btn-toggle>
           <v-spacer />
           <v-btn
             left
@@ -51,6 +36,18 @@
               @playing="playingVideo"
             />
           </v-responsive>
+          <v-btn-toggle
+            v-model="isLoop"
+            style="margin-left:20px"
+          >
+            <v-btn
+              :value="true"
+              depressed
+            >
+              <v-icon>loop</v-icon>
+              <span>リピート</span>
+            </v-btn>
+          </v-btn-toggle>
           <v-card-title>
             <div>
               <span class="grey--text">
@@ -70,7 +67,10 @@
               </div>
             </div>
           </v-card-title>
-          <v-card-actions class="clipboard">
+          <v-card-actions
+            style="margin-bottom: 20px"
+            class="clipboard"
+          >
             <v-text-field
               :value="shareUrl"
               readonly
@@ -119,16 +119,6 @@
               <span>Twitterで共有する</span>
             </v-tooltip>
           </v-card-actions>
-          <div class="subscribe">
-            <script src="https://apis.google.com/js/platform.js" />
-            <div
-              :data-channelid="channelId"
-              class="g-ytsubscribe"
-              data-layout="full"
-              data-theme="dark"
-              data-count="default"
-            />
-          </div>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -310,11 +300,6 @@ export default {
 }
 .content__title {
   margin-top: 5px !important;
-}
-.subscribe {
-  padding: 0 20px;
-  height: 65px;
-  margin-top: 5px;
 }
 .small-button {
   margin-left: 8px !important;
