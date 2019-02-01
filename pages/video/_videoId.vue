@@ -45,6 +45,23 @@
                   color="blue darken-2"
                 />
               </v-flex>
+              <v-spacer />
+              <v-flex v-if="canEdit">
+                <v-tooltip bottom>
+                  <v-btn
+                    slot="activator"
+                    flat
+                    class="button--edit small-button"
+                    depressed
+                    @click="onEditButtonClicked"
+                  >
+                    <v-icon>
+                      edit
+                    </v-icon>
+                  </v-btn>
+                  <span>字幕作成ページに移動します</span>
+                </v-tooltip>
+              </v-flex>
             </v-layout>
             <v-flex xs12>
               <v-responsive :aspect-ratio="16/9">
@@ -284,7 +301,9 @@ export default {
       isAsr: false,
       isPartial: false,
       showsAsr: false,
-      hiddenSubtitles: []
+      hiddenSubtitles: [],
+      canEdit: false,
+      captionStatus: ""
     }
   },
   async asyncData({ params, query, error, $axios }) {
@@ -306,10 +325,11 @@ export default {
 
     let subtitles = (await $axios.$post("/api/subtitle", { id: params.videoId, type: "video" })).items;
 
-    const isAsr = resVideo.items[6].includes("asr");
+    const captionStatus = resVideo.items[6];
+    const isAsr = captionStatus.includes("asr");
     const subtitlesAsr = isAsr ? (await $axios.$post("/api/subtitle/asr", { id: params.videoId, type: "video" })).items : [];
 
-    const isPartial = resVideo.items[6].includes("partial");
+    const isPartial = captionStatus.includes("partial");
     const showsAsr = query.show === "asr"
     let filteredSubtitles;
     let hiddenSubtitles;
@@ -367,7 +387,9 @@ export default {
       selectedId: selectedId,
       isAsr: isAsr,
       isPartial: isPartial,
-      showsAsr: showsAsr
+      showsAsr: showsAsr,
+      canEdit: ["editable", "not_permitted"].some(e => captionStatus.includes(e)),
+      captionStatus: captionStatus
     };
   },
   watch: {
@@ -478,6 +500,9 @@ export default {
       window.open(`https://twitter.com/share?url=${encodeURIComponent(this.shareUrl)}&text=${encodeURIComponent(this.decodeHTML((this.selectedText + ' - ' + this.videoTitle).replace(/\r?\n/g, ' ')))}&hashtags=dotlive_button`);
       this.$refs.youtube.player.pauseVideo();
     },
+    onEditButtonClicked() {
+      this.$router.push({ path: `/edit/caption/${this.videoId}`, query: { status: this.captionStatus } });
+    },
     async sendPlayCount() {
       if (!this.selectedId || lock.isBusy(`${this.start}${this.end}${this.selectedText}`)) {
         return;
@@ -556,7 +581,8 @@ export default {
 }
 .small-button {
   margin: 0 0 0 8px;
-  min-width: auto;
+  min-width: 32px;
+  padding: 0 12px;
 }
 .expand-description-btn {
   margin: 0;
@@ -606,5 +632,10 @@ export default {
 }
 .v-swich--show-asr.v-input--selection-controls {
   margin-top: 0;
+}
+.button--edit {
+  margin: 0 0 0 6px;
+  height: 32px;
+  padding: 0 8px;
 }
 </style>
