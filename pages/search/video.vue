@@ -254,6 +254,7 @@ export default {
     store.commit("search/target", "video");
     store.commit("search/keyword", query.keyword ? query.keyword : "");
     store.commit("search/channelIdFilter", query.channel ? query.channel : "");
+    store.commit("search/captionStatusFilter", query.caption ? query.caption : "");
     store.commit("videoListPage/captionFilter", query.caption);
   },
   watch: {
@@ -293,6 +294,8 @@ export default {
         temp = temp.filter(e => ["uploaded", "dotlive_button"].some(cond => e[videoSheetColumn.STATUS].includes(cond)));
       }
       this.$store.commit("videoListPage/captionFilter", to.query.caption);
+      this.$store.commit("search/captionStatusFilter", to.query.caption ? to.query.caption : "");
+
 
       this.infiniteId++;
       this.filteredItems = temp;
