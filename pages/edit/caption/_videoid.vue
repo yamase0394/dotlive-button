@@ -26,7 +26,7 @@
         dark
         flat
         @click="() => {
-          $refs.dynamicScroller.scrollToItem(errorIndex);
+          $refs.recycleScroller.scrollToItem(errorIndex);
           errorSnackbar = false;
         }"
       >
@@ -469,39 +469,27 @@
                 class="subtitle-container"
                 column
               >
-                <dynamic-scroller
-                  ref="dynamicScroller"
+                <recycle-scroller
+                  ref="recycleScroller"
                   :key="selectedSubtitleVer"
                   :items="subtitleList"
-                  :min-item-height="86"
+                  :item-height="86"
                   style="height:100%"
                 >
-                  <template slot-scope="{ item, index, active }">
-                    <dynamic-scroller-item
-                      :active="active"
-                      :item="item"
-                      :size-dependencies="[item.text, item.height]"
-                    >
-                      <v-flex
-                        ref="subtitleCardContainer"
-                        :key="item.id"
-                        v-resize="onSubtitleCardResized(item)"
-                      >
-                        <subtitle-card
-                          :id="item.id"
-                          :ref="item.id"
-                          :end="item.end"
-                          :prop-has-error="item.hasError"
-                          :selected-id="selectedId"
-                          :start="item.start"
-                          :text="item.text"
-                          @subtitleCardCloseEvent="onSubtitleCardClosed"
-                          @subtitleCardSelectedEvent="onSubtitleCardSelected"
-                        />
-                      </v-flex>
-                    </dynamic-scroller-item>
-                  </template>
-                </dynamic-scroller>
+                  <subtitle-card
+                    :id="item.id"
+                    :key="item.id"
+                    :ref="item.id"
+                    slot-scope="{ item }"
+                    :end="item.end"
+                    :prop-has-error="item.hasError"
+                    :selected-id="selectedId"
+                    :start="item.start"
+                    :text="item.text"
+                    @subtitleCardCloseEvent="onSubtitleCardClosed"
+                    @subtitleCardSelectedEvent="onSubtitleCardSelected"
+                  />
+                </recycle-scroller>
               </v-layout>
             </v-radio-group>
           </v-container>
@@ -517,17 +505,18 @@ import VueYoutube from 'vue-youtube'
 import SubtitleCard from "~/components/SubtitleCard.vue"
 import download from "downloadjs"
 import parseSRT from 'parse-srt'
-import VueVirtualScroller from 'vue-virtual-scroller'
+import { RecycleScroller } from 'vue-virtual-scroller'
 import io from 'socket.io-client'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
 
 Vue.use(VueYoutube)
-Vue.use(VueVirtualScroller)
 
 export default {
   components: {
     SubtitleCard,
+    RecycleScroller,
   },
   data() {
     return {
@@ -563,7 +552,6 @@ export default {
     }
   },
   async asyncData({ params, query, $axios }) {
-    console.log(params);
     const res = await $axios.$post("/api/edit/subtitle/get", { videoId: params.videoid });
     const subtitleList = [];
     let existsCaptionOnServer = false;
@@ -676,7 +664,7 @@ export default {
       }
 
       this.$nextTick(() => {
-        this.$refs.dynamicScroller.scrollToItem(this.subtitleList.length - 1);
+        this.$refs.recycleScroller.scrollToItem(this.subtitleList.length - 1);
         this.selectedId = id;
       });
     },
@@ -756,7 +744,7 @@ export default {
       this.$nextTick(() => {
         const selectedItemIndex = this.subtitleList.findIndex(e => e.id === this.selectedId);
         if (selectedItemIndex !== -1) {
-          this.$refs.dynamicScroller.scrollToItem(selectedItemIndex);
+          this.$refs.recycleScroller.scrollToItem(selectedItemIndex);
         }
       });
 
@@ -825,7 +813,7 @@ export default {
           e.end = this.subtitleList[i + 1].start;
         }
       });
-      const filteredSubtitleList = this.subtitleList.filter(e => e.text);
+      const filteredSubtitleList = this.subtitleList.filter(e => e.text && e.text.replace(/\s+/g, "").length >= 1);
       if (filteredSubtitleList.length > 0) {
         let output = "";
         filteredSubtitleList.forEach((subtitle, index) => {
@@ -863,8 +851,8 @@ export default {
         return;
       }
 
-      const filteredSubtitleList = this.subtitleList.filter(e => !e.text);
-      if (filteredSubtitleList.length === 0) {
+      const errorSubtitleList = this.subtitleList.filter(e => !e.text || e.text.replace(/\s+/g, "").length < 1);
+      if (errorSubtitleList.length === 0) {
         let output = [];
         this.subtitleList.forEach((subtitle, index) => {
           output.push([subtitle.start, subtitle.end - subtitle.start, subtitle.text]);
@@ -880,16 +868,14 @@ export default {
           this.showErrorSnackbar(`アップロード失敗${error.response.data.message}`);
         });
       } else {
-        filteredSubtitleList.forEach(e => {
+        errorSubtitleList.forEach(e => {
           e.hasError = true;
           if (this.$refs[e.id]) {
             this.$refs[e.id].error(true);
           }
         });
 
-        this.errorIndex = filteredSubtitleList[0].id;
-        this.snackbarText = "字幕を入力してください";
-        this.errorSnackbar = true;
+        this.showSubtitleListErrorSnackbar("字幕を入力してください", errorSubtitleList[0].id);
       }
 
       this.progressDialog = false;
@@ -933,13 +919,6 @@ export default {
           console.log(e);
         }
       }.bind(this)
-    },
-    onSubtitleCardResized(item) {
-      this.$nextTick(() => {
-        try {
-          item.height = this.$refs.subtitleCardContainer.clientHeight;
-        } catch (e) { console.log(e) }
-      });
     },
     uploadButtonClicked() {
       this.showConfirmDialog(
@@ -1053,22 +1032,6 @@ export default {
   margin-left: 0 !important;
   min-width: auto !important;
   margin: 0;
-}
-.vue-recycle-scroller__item-wrapper {
-  box-sizing: border-box;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-}
-.vue-recycle-scroller.ready .vue-recycle-scroller__item-view {
-  width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  will-change: transform;
-}
-.vue-recycle-scroller:not(.page-mode) {
-  overflow-y: auto;
 }
 .connectionCount.v-chip {
   margin: 0;

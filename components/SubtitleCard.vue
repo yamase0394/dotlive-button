@@ -30,12 +30,12 @@
         </v-layout>
         <v-textarea
           v-model="subtitle"
+          class="textarea--subtitle"
           flat
           solo
           readonly
           hide-details
-          auto-grow
-          rows="2"
+          rows="3"
         />
         <v-btn
           class="small__btn"
@@ -190,5 +190,17 @@ export default {
 }
 .error-card {
   background-color: #d32f2f !important;
+}
+.v-input--selection-controls:not(.v-input--hide-details) .v-input__slot {
+  margin-bottom: 0 !important;
+}
+.textarea--subtitle
+  .v-textarea.v-text-field--box.v-text-field--single-line
+  .v-text-field__prefix,
+.v-textarea.v-text-field--enclosed.v-text-field--single-line
+  .v-text-field__prefix,
+.v-textarea.v-text-field--box.v-text-field--single-line textarea,
+.v-textarea.v-text-field--enclosed.v-text-field--single-line textarea {
+  margin-top: 0;
 }
 </style>
