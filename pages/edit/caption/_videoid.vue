@@ -766,13 +766,13 @@ export default {
 
         if (i > 0 && oneBefore.end > target.start) {
           target.hasError = true;
-          try {
+          if (this.$refs[target.id]) {
             this.$refs[target.id].error(true);
-          } catch (e) { console.log(e) };
+          }
           oneBefore.hasError = true;
-          try {
+          if (this.$refs[oneBefore.id]) {
             this.$refs[oneBefore.id].error(true);
-          } catch (e) { console.log(e) };
+          }
 
           if (!this.errorSnackbar) {
             this.showSubtitleListErrorSnackbar("時間が重なっています", i - 1);
@@ -783,9 +783,9 @@ export default {
 
         if (target.start === target.end) {
           target.hasError = true;
-          try {
+          if (this.$refs[target.id]) {
             this.$refs[target.id].error(true);
-          } catch (e) { console.log(e) };
+          }
 
           if (!this.errorSnackbar) {
             this.showSubtitleListErrorSnackbar("開始時間と終了時間が同じです", i);
@@ -795,9 +795,9 @@ export default {
         }
 
         target.hasError = false;
-        try {
+        if (this.$refs[target.id]) {
           this.$refs[target.id].error(false);
-        } catch (e) { console.log(e) };
+        }
       }
     },
     onPlayButtonClicked() {
@@ -882,9 +882,9 @@ export default {
       } else {
         filteredSubtitleList.forEach(e => {
           e.hasError = true;
-          try {
+          if (this.$refs[e.id]) {
             this.$refs[e.id].error(true);
-          } catch (e) { };
+          }
         });
 
         this.errorIndex = filteredSubtitleList[0].id;
