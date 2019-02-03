@@ -6,7 +6,8 @@
   >
     <v-dialog
       v-model="dialog"
-      width="60vw"
+      :width="isMobile ? '100vw' : '60vw'"
+      :content-class="isMobile ? 'ma-0' : ''"
       scrollable
       @keydown.esc="dialog = false"
     >
@@ -43,6 +44,7 @@
             <v-btn
               :value="true"
               depressed
+              color="blue darken-2"
             >
               <v-icon>loop</v-icon>
               <span>リピート</span>
@@ -59,7 +61,10 @@
                   内容
                 </span><br>
                 <span v-html="text" /><br>
-                <div :style="{marginTop:'3px'}">
+                <div
+                  v-if="!isMobile"
+                  :style="{marginTop:'3px'}"
+                >
                   <span class="grey--text">
                     URL
                   </span><br>
@@ -72,6 +77,7 @@
             class="clipboard"
           >
             <v-text-field
+              v-if="!isMobile"
               :value="shareUrl"
               readonly
               hide-details
@@ -174,6 +180,13 @@ export default {
       isAsr: false
     };
   },
+  computed: {
+    isMobile() {
+      return ["xs", "sm"].some(e => {
+        return this.$vuetify.breakpoint.name === e;
+      });
+    }
+  },
   watch: {
     async dialog(value) {
       if (value) {
@@ -272,18 +285,6 @@ export default {
 </script>
 
 <style>
-.video {
-  height: calc(60vw * 9 / 16);
-  width: calc(60vh * 16 / 9);
-  max-width: 60vw;
-  max-height: 60vh;
-  position: absolute;
-  margin: auto;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
 .v-card__title {
   padding: 5px 16px 0 16px;
 }

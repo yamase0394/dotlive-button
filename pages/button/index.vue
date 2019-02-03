@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-scroll="onScroll">
     <v-fab-transition>
       <v-btn
         v-show="scrollToTopFab"
@@ -14,52 +14,42 @@
         <v-icon>keyboard_arrow_up</v-icon>
       </v-btn>
     </v-fab-transition>
-    <v-container class="voice-root">
+    <v-layout
+      :class="[{'pt-2':!isMobile}, {'pt-0':isMobile}]"
+      align-center
+      column
+    >
+      <v-select
+        v-model="filter.channel"
+        :class="[{'channel-filter':!isMobile}, {'channel-filter--mobile':isMobile}]"
+        :items="channelFilterItems"
+        :menu-props="{ maxHeight: '70vh' }"
+        @change="onChannelFilterChanged"
+      />
       <v-layout
-        ref="rootLayout"
-        align-center
-        column
+        row
+        wrap
+        :class="[{'voice-card-container':!isMobile}, {'voice-card-container--mobile':isMobile}]"
       >
-        <v-flex>
-          <v-select
-            v-model="filter.channel"
-            :items="channelFilterItems"
-            :menu-props="{ maxHeight: '80vh' }"
-            @change="onChannelFilterChanged"
+        <v-flex
+          v-for="item in subtitles"
+          :key="item[5]"
+          shrink
+          :class="[{'pa-1':!isMobile},{'voice-card-padding':isMobile}]"
+        >
+          <voice-card
+            :id="item[5]"
+            :ref="item[5]"
+            :start="Number(item[0])"
+            :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
+            :text="(item[2])"
+            :video-id="item[4]"
+            :avater-url="channelIdToThumb[item[3]]"
+            @btnClickedEvent="onVoiceCardBtnClicked"
           />
         </v-flex>
-        <v-flex>
-          <v-container
-            fluid
-            px-5
-            pt-0
-            grid-list-md
-          >
-            <v-layout
-              row
-              wrap
-              class="voice-card-container"
-            >
-              <v-flex
-                v-for="item in subtitles"
-                :key="item[5]"
-              >
-                <voice-card
-                  :id="item[5]"
-                  :ref="item[5]"
-                  :start="Number(item[0])"
-                  :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
-                  :text="(item[2])"
-                  :video-id="item[4]"
-                  :avater-url="channelIdToThumb[item[3]]"
-                  @btnClickedEvent="onVoiceCardBtnClicked"
-                />
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-flex>
       </v-layout>
-    </v-container>
+    </v-layout>
     <infinite-loading
       ref="infiniteLoading"
       spinner="spiral"
@@ -126,6 +116,13 @@ export default {
       subtitleIdSet: subtitleIdSet
     };
   },
+  computed: {
+    isMobile() {
+      return ["xs", "sm"].some(e => {
+        return this.$vuetify.breakpoint.name === e;
+      });
+    }
+  },
   watch: {
     '$route': async function (to, from) {
 
@@ -144,12 +141,6 @@ export default {
     this.$nextTick(() => {
       this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
     });
-  },
-  mounted() {
-    this.$refs.rootLayout.addEventListener("wheel", this.onScroll);
-  },
-  beforeDestroy() {
-    this.$refs.rootLayout.removeEventListener("wheel", this.onScroll);
   },
   methods: {
     onChannelFilterChanged(selectedChannName) {
@@ -192,6 +183,7 @@ export default {
     scrollToTop() {
       this.$nextTick(() => {
         this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
+        this.scrollToTopFab = false;
       });
     }
   }
@@ -199,14 +191,25 @@ export default {
 </script>
 
 <style>
-.voice-card-container .flex {
-  flex: 0 1 auto;
+.voice-card-container {
+  width: 75vw;
 }
-.v-pagination {
-  margin: 20px 0;
+.voice-card-container--mobile {
+  width: 90vw;
 }
-.voice-root {
-  padding-top: 10px;
-  max-width: 90vw;
+.channel-filter {
+  width: 20vw;
+}
+.channel-filter--mobile {
+  width: 70vw;
+}
+.channel-filter--mobile .v-messages {
+  min-height: 0;
+}
+.channel-filter--mobile.v-text-field {
+  padding-top: 0;
+}
+.voice-card-padding {
+  padding: 2px;
 }
 </style>

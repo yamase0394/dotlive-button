@@ -1,56 +1,47 @@
 <template>
-  <v-container class="voice-root">
+  <v-layout
+    :class="[{'pt-2':!isMobile}, {'pt-0':isMobile}]"
+    align-center
+    column
+  >
+    <v-select
+      v-model="filter.channel"
+      :class="[{'channel-filter':!isMobile}, {'channel-filter--mobile':isMobile}]"
+      :items="channelFilterItems"
+      :menu-props="{ maxHeight: '70vh' }"
+      @change="onChannelFilterChanged"
+    />
     <v-layout
-      align-center
-      column
+      :class="[{'voice-card-container':!isMobile}, {'voice-card-container--mobile':isMobile}]"
+      row
+      wrap
     >
-      <v-flex>
-        <v-select
-          v-model="filter.channel"
-          :items="channelFilterItems"
-          :menu-props="{ maxHeight: '80vh' }"
-          @change="onChannelFilterChanged"
-        />
-      </v-flex>
-      <v-flex>
-        <v-container
-          fluid
-          px-5
-          pt-0
-          grid-list-md
-        >
-          <v-layout
-            row
-            wrap
-          >
-            <v-flex
-              v-for="item in subtitles"
-              :key="item[5]"
-            >
-              <voice-card
-                :id="item[5]"
-                :ref="item[5]"
-                :start="Number(item[0])"
-                :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
-                :text="(item[2])"
-                :video-id="item[4]"
-                :avater-url="channelIdToThumb[item[3]]"
-                @btnClickedEvent="onVoiceCardBtnClicked"
-              />
-            </v-flex>
-          </v-layout>
-        </v-container>
-      </v-flex>
-      <v-flex>
-        <v-pagination
-          v-model="pageNumber"
-          :length="pageCount"
-          :total-visible="9"
-          @input="next"
+      <v-flex
+        v-for="item in subtitles"
+        :key="item[5]"
+        shrink
+        :class="[{'pa-1':!isMobile},{'voice-card-padding':isMobile}]"
+      >
+        <voice-card
+          :id="item[5]"
+          :ref="item[5]"
+          :start="Number(item[0])"
+          :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
+          :text="(item[2])"
+          :video-id="item[4]"
+          :avater-url="channelIdToThumb[item[3]]"
+          @btnClickedEvent="onVoiceCardBtnClicked"
         />
       </v-flex>
     </v-layout>
-  </v-container>
+    <v-pagination
+      v-model="pageNumber"
+      :class="[{'my-4':!isMobile}, {'my-1':isMobile}]"
+      :total-visible="isMobile ? 5 : 9"
+      :length="pageCount"
+      @input="next"
+    />
+  </v-layout>
 </template>
 
 <script>
@@ -70,7 +61,7 @@ export default {
       channelNameToId: {},
       channelFilterItems: [],
       filter: null,
-      selectedVoiceCard: "-1",
+      selectedVoiceCard: "-1"
     }
   },
   async asyncData({ params, query, error, $axios }) {
@@ -120,8 +111,17 @@ export default {
   fetch({ store, query }) {
     store.commit("search/channelIdFilter", query.channel ? query.channel : "");
   },
+  computed: {
+    isMobile() {
+      return ["xs", "sm"].some(e => {
+        return this.$vuetify.breakpoint.name === e;
+      });
+    }
+  },
   watch: {
     '$route': async function (to, from) {
+      this.$nuxt.$loading.start();
+
       const page = to.query.page ? Number(to.query.page) : 1;
       let subtitleRes;
       if (this.channelIdToName[to.query.channel]) {
@@ -141,6 +141,7 @@ export default {
 
       this.$nextTick(() => {
         this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
+        this.$nuxt.$loading.finish();
       });
     },
   },
@@ -177,14 +178,28 @@ export default {
 </script>
 
 <style>
-.flex {
-  flex: 0 1 auto;
-}
 .v-pagination {
   margin: 20px 0;
 }
-.voice-root {
-  padding-top: 10px;
-  max-width: 90vw;
+.voice-card-container {
+  width: 75vw;
+}
+.voice-card-container--mobile {
+  width: 90vw;
+}
+.channel-filter {
+  width: 20vw;
+}
+.channel-filter--mobile {
+  width: 70vw;
+}
+.channel-filter--mobile .v-messages {
+  min-height: 0;
+}
+.channel-filter--mobile.v-text-field {
+  padding-top: 0;
+}
+.voice-card-padding {
+  padding: 2px;
 }
 </style>

@@ -56,7 +56,13 @@ module.exports = {
   /*
    ** Customize the progress-bar color
    */
-  loading: { color: "#1976d2", height: "2px" },
+  loading: "~/components/loading.vue",
+
+  loadingIndicator: {
+    color: "#1976D2",
+    name: "fading-circle",
+    background: "#424242"
+  },
 
   /*
    ** Global CSS
@@ -89,7 +95,8 @@ module.exports = {
         id: "UA-53088406-3"
       }
     ],
-    ["@nuxtjs/redirect-module", [{ from: "^/$", to: "/button" }]]
+    ["@nuxtjs/redirect-module", [{ from: "^/$", to: "/button" }]],
+    ["portal-vue/nuxt"]
   ],
   /*
    ** Axios module configuration

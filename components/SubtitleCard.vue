@@ -1,6 +1,7 @@
 <template>
   <v-card
     :class="cardStyle"
+    class="subtitle-card-root"
     ripple
     @click.native="onCardClicked()"
   >
@@ -176,7 +177,11 @@ export default {
   margin-right: 10px !important;
   width: 58px;
 }
-.container.grid-list-md *:not(:only-child) .layout:first-child .time__layout {
+.subtitle-card-root
+  .container.grid-list-md
+  *:not(:only-child)
+  .layout:first-child
+  .time__layout {
   margin-top: 5px;
 }
 .small__btn {

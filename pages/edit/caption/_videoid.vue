@@ -36,7 +36,7 @@
     <v-dialog
       v-model="progressDialog"
       persistent
-      width="300"
+      max-width="300px"
     >
       <v-card>
         <v-card-text>
@@ -51,7 +51,7 @@
     </v-dialog>
     <v-dialog
       v-model="notificationDialog"
-      max-width="420"
+      max-width="420px"
       persistent
     >
       <v-card>
@@ -81,7 +81,7 @@
     </v-dialog>
     <v-dialog
       v-model="confirmDialog"
-      max-width="420"
+      max-width="300px"
     >
       <v-card>
         <v-card-text>{{ confirmDialogText }}</v-card-text>
@@ -114,10 +114,14 @@
       @change="onSubRipFilePicked"
     >
     <v-toolbar
+      height="36px"
       flat
-      height="38px"
     >
-      <v-toolbar-items>
+      <v-layout
+        row
+        align-center
+        wrap
+      >
         <v-tooltip bottom>
           <v-chip
             slot="activator"
@@ -134,368 +138,320 @@
           </v-chip>
           <span>2人以上いる場合、重複して編集している可能性があるので注意してください</span>
         </v-tooltip>
-      </v-toolbar-items>
-      <v-spacer />
-      <v-toolbar-items>
-        <v-btn
-          flat
-          @click="showPickSubRipFileDialog"
+        <v-spacer />
+        <v-menu
+          bottom
+          left
         >
-          <v-icon left>
-            insert_drive_file
-          </v-icon>SubRipファイルを読み込む
-        </v-btn>
-        <v-btn
-          flat
-          @click="downloadSubRip"
-        >
-          <v-icon left>
-            get_app
-          </v-icon>SubRipファイルを保存
-        </v-btn>
-        <v-btn
-          :loading="progressDialog"
-          flat
-          @click="uploadButtonClicked"
-        >
-          <v-icon left>
-            cloud_upload
-          </v-icon>字幕をアップロード
-        </v-btn>
-      </v-toolbar-items>
-    </v-toolbar>
-    <v-container fluid>
-      <v-layout
-        justify-space-around
-        row
-      >
-        <v-flex
-          style="max-width:45vw"
-          xs7
-        >
-          <v-container
-            class="padding-0"
-            grid-list-md
+          <v-btn
+            slot="activator"
+            dark
+            icon
           >
-            <v-layout column>
-              <v-flex class="flex-grow-0">
-                <v-responsive
-                  :key="videoId"
-                  :aspect-ratio="16/9"
-                >
-                  <youtube
-                    ref="youtube"
-                    :video-id="videoId"
-                    height="100%"
-                    width="100%"
-                    @paused="videoPaused"
-                    @playing="playingVideo"
-                  />
-                  <p class="subtitle__text">
-                    <span
-                      v-if="displaySubtitle"
-                      class="subtitle__background"
-                    >
-                      {{ displaySubtitle }}
-                    </span>
-                  </p>
-                </v-responsive>
+            <v-icon>more_vert</v-icon>
+          </v-btn>
+          <v-list>
+            <v-list-tile @click="showPickSubRipFileDialog">
+              <v-list-tile-avatar>
+                <v-icon>insert_drive_file</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-title>SubRipファイルを読み込む</v-list-tile-title>
+            </v-list-tile>
+            <v-list-tile @click="downloadSubRip">
+              <v-list-tile-avatar>
+                <v-icon>get_app</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-title>SubRipファイルを保存</v-list-tile-title>
+            </v-list-tile>
+            <v-list-tile @click="uploadButtonClicked">
+              <v-list-tile-avatar>
+                <v-icon>cloud_upload</v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-title>字幕をアップロード</v-list-tile-title>
+            </v-list-tile>
+            <v-list-tile @click="deleteAllButtonClicked">
+              <v-list-tile-avatar>
+                <v-icon color="red">
+                  delete_forever
+                </v-icon>
+              </v-list-tile-avatar>
+              <v-list-tile-title>字幕をすべて削除する</v-list-tile-title>
+            </v-list-tile>
+          </v-list>
+        </v-menu>
+      </v-layout>
+    </v-toolbar>
+    <v-layout
+      :pa-4="!isMobile"
+      :pa-1="isMobile"
+      justify-center
+      row
+    >
+      <v-flex
+        :px-5="!isMobile"
+        xs7
+      >
+        <v-responsive
+          :key="videoId"
+          :aspect-ratio="16/9"
+          class="pb-3"
+        >
+          <youtube
+            ref="youtube"
+            :video-id="videoId"
+            height="100%"
+            width="100%"
+            @paused="videoPaused"
+            @playing="playingVideo"
+          />
+          <p class="subtitle__text">
+            <span
+              v-if="displaySubtitle"
+              class="subtitle__background"
+            >
+              {{ displaySubtitle }}
+            </span>
+          </p>
+        </v-responsive>
+        <v-layout
+          justify-center
+          row
+          wrap
+          pb-2
+        >
+          <v-btn
+            class="small-button mx-2"
+            depressed
+            @click="seekVideo(-5)"
+          >
+            <v-icon>replay_5</v-icon>
+          </v-btn>
+          <v-btn
+            class="small-button mx-2"
+            depressed
+            @click="seekVideo(-1)"
+          >
+            <v-icon>
+              chevron_left
+            </v-icon>
+          </v-btn>
+          <v-btn
+            class="small-button mx-2"
+            depressed
+            @click="onPlayButtonClicked"
+          >
+            <v-icon>{{ playIcon }}</v-icon>
+          </v-btn>
+          <v-btn
+            class="small-button mx-2"
+            depressed
+            @click="seekVideo(1)"
+          >
+            <v-icon>
+              chevron_right
+            </v-icon>
+          </v-btn>
+          <v-btn
+            class="small-button mx-2"
+            depressed
+            @click="seekVideo(5)"
+          >
+            <v-icon>forward_5</v-icon>
+          </v-btn>
+        </v-layout>
+        <v-layout
+          v-if="selectedId !== -1"
+          align-center
+          row
+          wrap
+        >
+          <v-flex
+            md6
+            xs12
+          >
+            <v-btn
+              class="pa-1"
+              @click="playFromSelectedStart"
+            >
+              <v-icon left>
+                play_arrow
+              </v-icon>編集中の開始時間から再生
+            </v-btn>
+          </v-flex>
+          <v-flex
+            md6
+            xs12
+            py-1
+            pl-1
+          >
+            <v-switch
+              v-model="loop"
+              class="repeat-checkbox"
+              color="#1976d2"
+              label="編集位置をリピート"
+            />
+          </v-flex>
+          <v-flex
+            md6
+            xs12
+          >
+            <v-layout align-center>
+              <v-btn @click="setCurrentTimeToStart">
+                現在の時間
+              </v-btn>
+              <v-flex xs6>
+                <v-text-field
+                  :value="selectedStart"
+                  class="start-end-time-textfield"
+                  label="開始時間（秒）"
+                  type="number"
+                  @input="formatStartTime"
+                />
               </v-flex>
-              <v-layout
-                justify-center
-                row
-                style="margin-top: 10px"
-                wrap
-              >
-                <v-flex class="flex-grow-0">
-                  <v-btn
-                    class="small-button"
-                    depressed
-                    @click="seekVideo(-5)"
-                  >
-                    <v-icon>replay_5</v-icon>
-                  </v-btn>
-                </v-flex>
-                <v-flex class="flex-grow-0">
-                  <v-btn
-                    class="small-button"
-                    depressed
-                    @click="seekVideo(-1)"
-                  >
-                    <v-icon left>
-                      chevron_left
-                    </v-icon>1秒
-                  </v-btn>
-                </v-flex>
-                <v-flex class="flex-grow-0">
-                  <v-btn
-                    class="small-button"
-                    depressed
-                    @click="onPlayButtonClicked"
-                  >
-                    <v-icon>{{ playIcon }}</v-icon>
-                  </v-btn>
-                </v-flex>
-                <v-flex class="flex-grow-0">
-                  <v-btn
-                    class="small-button"
-                    depressed
-                    @click="seekVideo(1)"
-                  >
-                    1秒
-                    <v-icon right>
-                      chevron_right
-                    </v-icon>
-                  </v-btn>
-                </v-flex>
-                <v-flex class="flex-grow-0">
-                  <v-btn
-                    class="small-button"
-                    depressed
-                    @click="seekVideo(5)"
-                  >
-                    <v-icon>forward_5</v-icon>
-                  </v-btn>
-                </v-flex>
-              </v-layout>
-              <v-layout
-                v-if="selectedId !== -1"
-                align-center
-                row
-                wrap
-              >
-                <v-flex
-                  class="flex-grow-0"
-                  md6
-                  xs12
-                >
-                  <v-btn @click="playFromSelectedStart">
-                    <v-icon left>
-                      play_arrow
-                    </v-icon>編集中の開始時間から再生
-                  </v-btn>
-                </v-flex>
-                <v-flex
-                  md6
-                  xs12
-                >
-                  <v-switch
-                    v-model="loop"
-                    color="#1976d2"
-                    label="編集位置をリピート"
-                  />
-                </v-flex>
-                <v-flex
-                  class="flex-grow-0"
-                  md3
-                  xs6
-                >
-                  <v-btn @click="setCurrentTimeToStart">
-                    現在の再生時間
-                  </v-btn>
-                </v-flex>
-                <v-flex
-                  class="flex-grow-0"
-                  md3
-                  xs6
-                >
-                  <v-text-field
-                    :value="selectedStart"
-                    label="開始時間（秒）"
-                    type="number"
-                    @input="formatStartTime"
-                  />
-                </v-flex>
-                <v-flex
-                  md5
-                  xs12
-                >
-                  <v-layout wrap>
-                    <v-flex
-                      class="flex-grow-0"
-                      md3
-                      xs6
-                    >
-                      <v-btn @click="changeSelectedStart(-1)">
-                        -1
-                      </v-btn>
-                    </v-flex>
-                    <v-flex
-                      class="flex-grow-0"
-                      md3
-                      xs6
-                    >
-                      <v-btn @click="changeSelectedStart(-0.1)">
-                        -0.1
-                      </v-btn>
-                    </v-flex>
-                    <v-flex
-                      class="flex-grow-0"
-                      md3
-                      xs6
-                    >
-                      <v-btn @click="changeSelectedStart(0.1)">
-                        +0.1
-                      </v-btn>
-                    </v-flex>
-                    <v-flex
-                      class="flex-grow-0"
-                      md3
-                      xs6
-                    >
-                      <v-btn @click="changeSelectedStart(1)">
-                        +1
-                      </v-btn>
-                    </v-flex>
-                  </v-layout>
-                </v-flex>
-                <v-flex
-                  class="flex-grow-0"
-                  md3
-                  xs6
-                >
-                  <v-btn @click="setCurrentTimeToEnd">
-                    現在の再生時間
-                  </v-btn>
-                </v-flex>
-                <v-flex
-                  class="flex-grow-0"
-                  md3
-                  xs6
-                >
-                  <v-text-field
-                    :value="selectedEnd"
-                    label="終了時間（秒）"
-                    type="number"
-                    @input="formatEndTime"
-                  />
-                </v-flex>
-                <v-flex
-                  md5
-                  xs12
-                >
-                  <v-layout wrap>
-                    <v-flex
-                      class="flex-grow-0"
-                      md3
-                      xs6
-                    >
-                      <v-btn @click="changeSelectedEnd(-1)">
-                        -1
-                      </v-btn>
-                    </v-flex>
-                    <v-flex
-                      class="flex-grow-0"
-                      md3
-                      xs6
-                    >
-                      <v-btn @click="changeSelectedEnd(-0.1)">
-                        -0.1
-                      </v-btn>
-                    </v-flex>
-                    <v-flex
-                      class="flex-grow-0"
-                      md3
-                      xs6
-                    >
-                      <v-btn @click="changeSelectedEnd(0.1)">
-                        +0.1
-                      </v-btn>
-                    </v-flex>
-                    <v-flex
-                      class="flex-grow-0"
-                      md3
-                      xs6
-                    >
-                      <v-btn @click="changeSelectedEnd(1)">
-                        +1
-                      </v-btn>
-                    </v-flex>
-                  </v-layout>
-                </v-flex>
-                <v-flex
-                  class="flex-grow-0"
-                  xs12
-                >
-                  <v-textarea
-                    v-model="selectedSubtitle"
-                    auto-grow
-                    flat
-                    label="字幕"
-                    rows="2"
-                  />
-                </v-flex>
-              </v-layout>
             </v-layout>
-          </v-container>
-        </v-flex>
-        <v-flex xs5>
-          <v-container
-            class="padding-0 subtitle-container"
-            grid-list-sm
+          </v-flex>
+          <v-flex
+            md6
+            xs12
+          >
+            <v-layout>
+              <v-btn
+                :class="{'small-button mx-1':isMobile}"
+                @click="changeSelectedStart(-1)"
+              >
+                -1
+              </v-btn>
+              <v-btn
+                :class="{'small-button mx-1':isMobile}"
+                @click="changeSelectedStart(-0.1)"
+              >
+                -0.1
+              </v-btn>
+              <v-btn
+                :class="{'small-button mx-1':isMobile}"
+                @click="changeSelectedStart(0.1)"
+              >
+                +0.1
+              </v-btn>
+
+              <v-btn
+                :class="{'small-button mx-1':isMobile}"
+                @click="changeSelectedStart(1)"
+              >
+                +1
+              </v-btn>
+            </v-layout>
+          </v-flex>
+          <v-flex
+            md6
+            xs12
+          >
+            <v-layout align-center>
+              <v-btn @click="setCurrentTimeToEnd">
+                現在の時間
+              </v-btn>
+              <v-flex xs6>
+                <v-text-field
+                  class="start-end-time-textfield"
+                  :value="selectedEnd"
+                  label="終了時間（秒）"
+                  type="number"
+                  @input="formatEndTime"
+                />
+              </v-flex>
+            </v-layout>
+          </v-flex>
+          <v-flex
+            md6
+            xs12
+          >
+            <v-layout>
+              <v-btn
+                :class="{'small-button mx-1':isMobile}"
+                @click="changeSelectedEnd(-1)"
+              >
+                -1
+              </v-btn>
+              <v-btn
+                :class="{'small-button mx-1':isMobile}"
+                @click="changeSelectedEnd(-0.1)"
+              >
+                -0.1
+              </v-btn>
+              <v-btn
+                :class="{'small-button mx-1':isMobile}"
+                @click="changeSelectedEnd(0.1)"
+              >
+                +0.1
+              </v-btn>
+              <v-btn
+                :class="{'small-button mx-1':isMobile}"
+                @click="changeSelectedEnd(1)"
+              >
+                +1
+              </v-btn>
+            </v-layout>
+          </v-flex>
+          <v-flex xs12>
+            <v-textarea
+              v-model="selectedSubtitle"
+              auto-grow
+              flat
+              label="字幕"
+              rows="2"
+            />
+          </v-flex>
+        </v-layout>
+      </v-flex>
+      <v-flex
+        :pr-5="!isMobile"
+        xs5
+      >
+        <div class="subtitle-container">
+          <v-layout
+            justify-space-between
+            row
+          >
+            <v-btn @click="addSubtitleCard">
+              <v-icon left>
+                add_comment
+              </v-icon>字幕を追加
+            </v-btn>
+          </v-layout>
+          <v-radio-group
+            v-model="selectedId"
+            class="edit-caption-container"
           >
             <v-layout
-              justify-space-between
-              row
+              class="subtitle-container"
+              column
             >
-              <v-btn @click="addSubtitleCard">
-                <v-icon left>
-                  add_comment
-                </v-icon>字幕を追加
-              </v-btn>
-              <v-menu
-                bottom
-                left
+              <recycle-scroller
+                ref="recycleScroller"
+                :key="selectedSubtitleVer"
+                :items="subtitleList"
+                :item-height="86"
+                style="height:100%"
               >
-                <v-btn
-                  slot="activator"
-                  dark
-                  icon
-                >
-                  <v-icon>more_vert</v-icon>
-                </v-btn>
-                <v-list>
-                  <v-list-tile @click="deleteAllButtonClicked">
-                    <v-list-tile-title>すべて削除する</v-list-tile-title>
-                  </v-list-tile>
-                </v-list>
-              </v-menu>
+                <subtitle-card
+                  :id="item.id"
+                  :key="item.id"
+                  :ref="item.id"
+                  slot-scope="{ item }"
+                  :end="item.end"
+                  :prop-has-error="item.hasError"
+                  :selected-id="selectedId"
+                  :start="item.start"
+                  :text="item.text"
+                  @subtitleCardCloseEvent="onSubtitleCardClosed"
+                  @subtitleCardSelectedEvent="onSubtitleCardSelected"
+                />
+              </recycle-scroller>
             </v-layout>
-            <v-radio-group
-              v-model="selectedId"
-              class="edit-caption-container"
-            >
-              <v-layout
-                class="subtitle-container"
-                column
-              >
-                <recycle-scroller
-                  ref="recycleScroller"
-                  :key="selectedSubtitleVer"
-                  :items="subtitleList"
-                  :item-height="86"
-                  style="height:100%"
-                >
-                  <subtitle-card
-                    :id="item.id"
-                    :key="item.id"
-                    :ref="item.id"
-                    slot-scope="{ item }"
-                    :end="item.end"
-                    :prop-has-error="item.hasError"
-                    :selected-id="selectedId"
-                    :start="item.start"
-                    :text="item.text"
-                    @subtitleCardCloseEvent="onSubtitleCardClosed"
-                    @subtitleCardSelectedEvent="onSubtitleCardSelected"
-                  />
-                </recycle-scroller>
-              </v-layout>
-            </v-radio-group>
-          </v-container>
-        </v-flex>
-      </v-layout>
-    </v-container>
+          </v-radio-group>
+        </div>
+      </v-flex>
+    </v-layout>
   </div>
 </template>
 
@@ -567,6 +523,13 @@ export default {
       videoId: params.videoid,
       subtitleList: subtitleList,
       existsCaptionOnServer: existsCaptionOnServer
+    }
+  },
+  computed: {
+    isMobile() {
+      return ["xs", "sm"].some(e => {
+        return this.$vuetify.breakpoint.name === e;
+      });
     }
   },
   watch: {
@@ -987,15 +950,8 @@ export default {
 </script>
 
 <style>
-.video-id__field .v-text-field.v-text-field--solo .v-input__control {
-  min-height: 35px;
-}
-.video-id__field .v-input__control .v-input__slot {
-  margin-bottom: 0;
-}
 .subtitle-container {
   height: calc(100vh - 170px - 38px);
-  margin-left: 10px;
 }
 .subtitle-container .v-input--selection-controls {
   margin-top: 2px;
@@ -1003,14 +959,8 @@ export default {
 .subtitle-container .v-btn {
   margin-top: 0;
 }
-.flex-grow-0 {
-  flex-grow: 0;
-}
 .edit-caption-container.v-input--selection-controls .v-input__control {
   flex-grow: 1;
-}
-.padding-0 {
-  padding: 0;
 }
 .subtitle__text {
   z-index: 3;
@@ -1035,6 +985,15 @@ export default {
 }
 .connectionCount.v-chip {
   margin: 0;
+}
+.repeat-checkbox.v-input--selection-controls {
+  margin-top: 0;
+}
+.repeat-checkbox .v-messages {
+  min-height: 0;
+}
+.start-end-time-textfield .v-messages {
+  min-height: 0;
 }
 </style>
 

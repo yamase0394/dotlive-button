@@ -1,64 +1,54 @@
 <template>
-  <v-container class="voice-root">
-    <v-layout
-      align-center
-      column
+  <v-layout
+    :class="[{'pt-2':!isMobile}, {'pt-0':isMobile}]"
+    align-center
+    column
+  >
+    <p
+      :class="[{'mt-3 mb-1':!isMobile}, {'mt-2 mb-0':isMobile}]"
+      class="grey--text"
     >
-      <v-flex>
-        <p class="grey--text">
-          検索結果 : {{ resultCount }}件
-        </p>
-      </v-flex>
-      <v-flex>
-        <v-select
-          v-model="filter.channel"
-          :items="channelFilterItems"
-          :menu-props="{ maxHeight: '80vh' }"
-          class="filter__select"
-          @change="onChannelFilterChanged"
-        />
-      </v-flex>
-      <v-flex>
-        <v-container
-          fluid
-          px-5
-          pt-0
-          grid-list-md
-        >
-          <v-layout
-            row
-            wrap
-            class="voice-card-container"
-          >
-            <v-flex
-              v-for="item in subtitles"
-              :key="item[5]"
-            >
-              <voice-card
-                :id="item[5]"
-                :ref="item[5]"
-                :start="Number(item[0])"
-                :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
-                :text="(item[2])"
-                :video-id="item[4]"
-                :avater-url="channelIdToThumb[item[3]]"
-                :type="type"
-                @btnClickedEvent="onVoiceCardBtnClicked"
-              />
-            </v-flex>
-          </v-layout>
-        </v-container>
-      </v-flex>
-      <v-flex>
-        <v-pagination
-          v-model="pageNumber"
-          :length="pageCount"
-          :total-visible="9"
-          @input="next"
+      検索結果 : {{ resultCount }}件
+    </p>
+    <v-select
+      v-model="filter.channel"
+      :class="[{'channel-filter':!isMobile}, {'channel-filter--mobile':isMobile}]"
+      :items="channelFilterItems"
+      :menu-props="{ maxHeight: '70vh' }"
+      @change="onChannelFilterChanged"
+    />
+    <v-layout
+      :class="[{'voice-card-container':!isMobile}, {'voice-card-container--mobile':isMobile}]"
+      row
+      wrap
+    >
+      <v-flex
+        v-for="item in subtitles"
+        :key="item[5]"
+        shrink
+        :class="[{'pa-1':!isMobile},{'voice-card-padding':isMobile}]"
+      >
+        <voice-card
+          :id="item[5]"
+          :ref="item[5]"
+          :start="Number(item[0])"
+          :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
+          :text="(item[2])"
+          :video-id="item[4]"
+          :avater-url="channelIdToThumb[item[3]]"
+          :type="type"
+          @btnClickedEvent="onVoiceCardBtnClicked"
         />
       </v-flex>
     </v-layout>
-  </v-container>
+    <v-pagination
+      v-model="pageNumber"
+      :class="[{'my-4':!isMobile}, {'my-1':isMobile}]"
+      :length="pageCount"
+      :total-visible="isMobile ? 5 : 9"
+      @input="next"
+    />
+  </v-layout>
 </template>
 
 <script>
@@ -147,12 +137,20 @@ export default {
     store.commit("search/keyword", query.keyword ? query.keyword : "");
     store.commit("search/channelIdFilter", query.channel ? query.channel : "");
   },
+  computed: {
+    isMobile() {
+      return ["xs", "sm"].some(e => {
+        return this.$vuetify.breakpoint.name === e;
+      });
+    }
+  },
   watch: {
     '$route': async function (to, from) {
-      console.log("route");
       if (!to.query.keyword) {
         return;
       }
+      this.$nuxt.$loading.start();
+
       this.$store.commit("search/keyword", to.query.keyword);
 
       const page = to.query.page ? Number(to.query.page) : 1;
@@ -185,6 +183,7 @@ export default {
 
       this.$nextTick(() => {
         this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
+        this.$nuxt.$loading.finish();
       });
     },
   },
@@ -197,11 +196,12 @@ export default {
       }
     },
     onChannelFilterChanged(selectedChannName) {
+
       if (this.$route.query.channel === this.channelNameToId[selectedChannName]) {
         //ブラウザの進むor戻る
         return;
       }
-      // this.filter.channel = selectedChannName;
+
       this.$router.push({ query: { keyword: this.$route.query.keyword, channel: this.channelNameToId[selectedChannName], page: 1 } });
     },
     onVoiceCardBtnClicked(id) {
@@ -216,17 +216,25 @@ export default {
 </script>
 
 <style>
-.voice-card-container .flex {
-  flex: 0 1 auto;
+.voice-card-container {
+  width: 75vw;
 }
-.v-pagination {
-  margin: 20px 0;
+.voice-card-container--mobile {
+  width: 90vw;
 }
-.voice-root {
-  padding-top: 10px;
-  max-width: 90vw;
+.channel-filter {
+  width: 20vw;
 }
-.filter__select {
+.channel-filter--mobile {
+  width: 70vw;
+}
+.channel-filter--mobile .v-messages {
+  min-height: 0;
+}
+.channel-filter--mobile.v-text-field {
   padding-top: 0;
+}
+.voice-card-padding {
+  padding: 2px;
 }
 </style>

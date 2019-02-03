@@ -7,219 +7,98 @@
     >
       {{ snackbarText }}
     </v-snackbar>
-    <v-container
-      grid-list-md
-      fluid
-      class="video-id-root"
+    <v-layout
+      row
+      wrap
     >
-      <v-layout row>
-        <v-flex
-          class="video-layout"
-          xs7
-        >
+      <v-flex
+        md7
+        xs12
+        :class="{'pl-3 py-3':!isMobile}"
+      >
+        <v-layout column>
           <v-layout
             row
-            wrap
+            align-center
+            :class="[{'pb-3':!isMobile},{'pb-1':isMobile}]"
           >
-            <v-layout row>
-              <v-flex v-if="isPartial">
-                <v-switch
-                  v-model="showsAsr"
-                  class="v-swich--show-asr"
-                  label="自動生成"
-                  color="blue darken-2"
-                />
-              </v-flex>
-              <v-spacer />
-              <v-flex v-if="canEdit">
-                <v-tooltip bottom>
-                  <v-btn
-                    slot="activator"
-                    flat
-                    class="button--edit small-button"
-                    depressed
-                    @click="onEditButtonClicked"
-                  >
-                    <v-icon>
-                      edit
-                    </v-icon>
-                  </v-btn>
-                  <span>字幕作成ページに移動します</span>
-                </v-tooltip>
-              </v-flex>
-            </v-layout>
-            <v-flex xs12>
-              <v-responsive :aspect-ratio="16/9">
-                <youtube
-                  ref="youtube"
-                  :video-id="videoId"
-                  :player-vars="{
-                    start: Math.floor(start),
-                    rel: 0
-                  }"
-                  width="100%"
-                  height="100%"
-                  @playing="playing"
-                />
-              </v-responsive>
-            </v-flex>
-            <v-layout
-              xs12
-              column
-              style="margin-left: 10px"
+            <v-switch
+              v-if="isPartial"
+              v-model="showsAsr"
+              class="v-swich--show-asr"
+              label="自動生成"
+              color="blue darken-2"
+            />
+            <v-tooltip
+              v-if="canEdit && !isMobile"
+              bottom
             >
-              <v-layout row>
-                <v-flex>
-                  <v-btn-toggle v-model="repeats">
-                    <v-btn
-                      :value="true"
-                      class="toggele__btn"
-                      depressed
-                    >
-                      <v-icon>loop</v-icon>
-                      <span>リピート</span>
-                    </v-btn>
-                  </v-btn-toggle>
-                </v-flex>
-                <v-flex>
-                  <v-btn
-                    class="button--edit small-button"
-                    @click="onSelectCurrentTimeButtonClicked"
-                  >
-                    現在の再生位置にあるボタンを選択
-                  </v-btn>
-                </v-flex>
-              </v-layout>
-              <v-flex
-                class="video-info-container"
-                xs12
+              <v-btn
+                slot="activator"
+                flat
+                class="button--edit small-button"
+                depressed
+                @click="onEditButtonClicked"
               >
-                <div class="grey--text">
-                  {{ new Date(publishedAt).toLocaleString() }}
-                </div>
-                <div
-                  class="video-title"
-                  v-html="videoTitle"
-                />
-                <v-divider />
-                <div :style="{marginTop:'5px'}">
-                  <span class="grey--text">
-                    内容
-                  </span><br>
-                  <span
-                    :style="{marginLeft:'5px'}"
-                    v-html="selectedText"
-                  /> <br>
-                </div>
-              </v-flex>
-              <v-flex
-                :style="{marginTop:'3px', maxHeight:'14px'}"
-                class="no-padding grey--text"
-              >
-                URL
-              </v-flex>
-              <v-layout align-center>
-                <v-flex
-                  class="no-padding"
-                  xs9
-                >
-                  <v-text-field
-                    :value="shareUrl"
-                    class="clipboard"
-                    readonly
-                    hide-details
-                    @focus="$event.target.select()"
-                  />
-                </v-flex>
-                <v-flex class="no-padding">
-                  <v-tooltip top>
-                    <v-btn
-                      slot="activator"
-                      v-clipboard:copy="shareUrl"
-                      v-clipboard:success="onCopy"
-                      v-clipboard:error="onCopyError"
-                      class="small-button"
-                      depressed
-                    >
-                      <v-icon small>
-                        file_copy
-                      </v-icon>
-                    </v-btn>
-                    <span>URLをクリップボードに貼り付ける</span>
-                  </v-tooltip>
-                </v-flex>
-                <v-flex class="no-padding">
-                  <v-tooltip top>
-                    <v-btn
-                      slot="activator"
-                      class="small-button"
-                      depressed
-                      color="#FF0000"
-                      @click="openVideoInNewTab"
-                    >
-                      <v-icon small>
-                        fab fa-youtube
-                      </v-icon>
-                    </v-btn>
-                    <span>YouTubeで開く</span>
-                  </v-tooltip>
-                  <v-tooltip top>
-                    <v-btn
-                      slot="activator"
-                      depressed
-                      class="small-button"
-                      color="#00aced"
-                      @click="openTwitterSharePage"
-                    >
-                      <v-icon small>
-                        fab fa-twitter
-                      </v-icon>
-                    </v-btn>
-                    <span>Twitterで共有する</span>
-                  </v-tooltip>
-                </v-flex>
-              </v-layout>
-              <v-flex class="no-padding">
-                <div :style="{marginTop:'10px'}">
-                  <span class="grey--text">
-                    説明
-                  </span><br>
-                </div>
-                <div
-                  :class="['video-description', expandDescriptionBtnText == 'もっと見る' ?'video-description-hidden':'']"
-                  v-html="videoDescription"
-                />
-                <v-btn
-                  v-if="videoDescription.split(/\r\n|\r|\n/).length > 3"
-                  class="expand-description-btn transparent"
-                  flat
-                  @click="onExpandDescriptionClicked"
-                >
-                  {{ expandDescriptionBtnText }}
-                </v-btn>
-                <div class="subscribe-btn">
-                  <script src="https://apis.google.com/js/platform.js" />
-                  <div
-                    :data-channelid="channelId"
-                    class="g-ytsubscribe"
-                    data-layout="full"
-                    data-theme="dark"
-                    data-count="default"
-                  />
-                </div>
-              </v-flex>
-            </v-layout>
+                <v-icon>
+                  edit
+                </v-icon>
+              </v-btn>
+              <span>字幕作成ページに移動します</span>
+            </v-tooltip>
           </v-layout>
-        </v-flex>
-        <v-flex
-          xs5
-        >
+          <v-responsive :aspect-ratio="16/9">
+            <youtube
+              ref="youtube"
+              :video-id="videoId"
+              :player-vars="{
+                start: Math.floor(start),
+                rel: 0
+              }"
+              width="100%"
+              height="100%"
+              @playing="playing"
+            />
+          </v-responsive>
           <v-layout
-            column
-            px-3
-            pt-0
+            row
+            align-start
+            :class="[{'px-2 pt-1':!isMobile},{'px-1 py-1 mobile-toolbar':isMobile}]"
           >
-            <v-flex>
+            <v-btn-toggle v-model="repeats">
+              <v-btn
+                :value="true"
+                class="toggele__btn"
+                depressed
+                color="blue darken-2"
+              >
+                <v-icon>loop</v-icon>
+                <span v-if="!isMobile">
+                  リピート
+                </span>
+              </v-btn>
+            </v-btn-toggle>
+            <v-btn
+              class="button--edit small-button"
+              @click="onSelectCurrentTimeButtonClicked"
+            >
+              再生位置にある字幕を選択
+            </v-btn>
+            <v-spacer />
+            <v-menu
+              v-if="isMobile"
+              v-model="mobileSearchMenu"
+              left
+              :close-on-content-click="false"
+            >
+              <v-btn
+                slot="activator"
+                class="search-button--mobile"
+                icon
+                flat
+              >
+                <v-icon>search</v-icon>
+              </v-btn>
               <v-text-field
                 v-model="filterText"
                 solo
@@ -228,42 +107,178 @@
                 append-icon="search"
                 class="button__searchbox"
                 @input="filterSubtitle"
+                @click:append="mobileSearchMenu = false"
               />
-            </v-flex>
-            <v-flex>
-              <v-container
-                fluid
-                class="flex-container"
-                grid-list-md
-              >
-                <v-layout
-                  ref="scrollableSubLayout"
-                  row
-                  wrap
-                  class="flex-scrollable"
-                  align-content-start
-                >
-                  <v-flex
-                    v-for="item in filteredSubtitles"
-                    :key="item[5]"
-                  >
-                    <simple-voice-card
-                      :id="item[5]"
-                      :ref="item[5]"
-                      :start="Number(item[0])"
-                      :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
-                      :text="item[2]"
-                      :selected-id="selectedId"
-                      @btnClicked="onVoiceBtnClicked"
-                    />
-                  </v-flex>
-                </v-layout>
-              </v-container>
-            </v-flex>
+            </v-menu>
           </v-layout>
-        </v-flex>
-      </v-layout>
-    </v-container>
+          <portal
+            :disabled="!isMobile"
+            to="destination"
+          >
+            <v-flex
+              :class="[{'px-2 pt-3':!isMobile},{'px-3 pt-2':isMobile}]"
+              xs12
+            >
+              <div class="grey--text">
+                {{ new Date(publishedAt).toLocaleString() }}
+              </div>
+              <div
+                style="word-break:break-word;heght:auto"
+                class="py-1"
+                v-html="videoTitle"
+              />
+              <v-divider />
+              <div class="pt-2">
+                <span class="grey--text">
+                  内容
+                </span><br>
+                <span
+                  class="pl-2"
+                  v-html="selectedText"
+                /> <br>
+              </div>
+              <div
+                style="maxHeight:14px"
+                class="grey--text pt-2"
+              >
+                URL
+              </div>
+              <v-layout
+                pt-3
+                row
+              >
+                <v-text-field
+                  v-if="!isMobile"
+                  :value="shareUrl"
+                  class="clipboard pa-0 pl-2"
+                  readonly
+                  hide-details
+                  @focus="$event.target.select()"
+                />
+                <v-tooltip top>
+                  <v-btn
+                    slot="activator"
+                    v-clipboard:copy="shareUrl"
+                    v-clipboard:success="onCopy"
+                    v-clipboard:error="onCopyError"
+                    class="small-button ml-0"
+                    depressed
+                  >
+                    <v-icon small>
+                      file_copy
+                    </v-icon>
+                    <span v-if="isMobile">
+                      この字幕のURLをコピー
+                    </span>
+                  </v-btn>
+                  <span>URLをクリップボードに貼り付ける</span>
+                </v-tooltip>
+                <v-tooltip top>
+                  <v-btn
+                    slot="activator"
+                    class="small-button"
+                    depressed
+                    color="#FF0000"
+                    @click="openVideoInNewTab"
+                  >
+                    <v-icon small>
+                      fab fa-youtube
+                    </v-icon>
+                  </v-btn>
+                  <span>YouTubeで開く</span>
+                </v-tooltip>
+                <v-tooltip top>
+                  <v-btn
+                    slot="activator"
+                    depressed
+                    class="small-button"
+                    color="#00aced"
+                    @click="openTwitterSharePage"
+                  >
+                    <v-icon small>
+                      fab fa-twitter
+                    </v-icon>
+                  </v-btn>
+                  <span>Twitterで共有する</span>
+                </v-tooltip>
+              </v-layout>
+              <div class="pt-2">
+                <span class="grey--text">
+                  説明
+                </span><br>
+              </div>
+              <div
+                class="pl-2"
+                :class="['video-description', expandDescriptionBtnText == 'もっと見る' ?'video-description-hidden':'']"
+                v-html="videoDescription"
+              />
+              <v-btn
+                v-if="videoDescription.split(/\r\n|\r|\n/).length > 3"
+                class="expand-description-btn transparent"
+                flat
+                @click="onExpandDescriptionClicked"
+              >
+                {{ expandDescriptionBtnText }}
+              </v-btn>
+              <div class="subscribe-btn">
+                <script src="https://apis.google.com/js/platform.js" />
+                <div
+                  :data-channelid="channelId"
+                  class="g-ytsubscribe"
+                  data-layout="full"
+                  data-theme="dark"
+                  data-count="default"
+                />
+              </div>
+            </v-flex>
+          </portal>
+        </v-layout>
+      </v-flex>
+      <v-flex
+        md5
+        xs12
+        :pa-3="!isMobile"
+      >
+        <v-text-field
+          v-if="isSearchBoxVisible"
+          v-model="filterText"
+          solo
+          clearable
+          hide-details
+          append-icon="search"
+          class="button__searchbox"
+          @input="filterSubtitle"
+        />
+        <div
+          :class="[{'flex-container--mobile':isMobile},{'flex-container':!isMobile}]"
+        >
+          <v-layout
+            ref="scrollableSubLayout"
+            :pt-2="!isMobile"
+            :px-2="isMobile"
+            row
+            align-content-start
+            align-start
+            wrap
+            class="flex-scrollable"
+          >
+            <simple-voice-card
+              v-for="item in filteredSubtitles"
+              :id="item[5]"
+              :key="item[5]"
+              :ref="item[5]"
+              :class="[{'simple-voice-card-margin--mobile':isMobile}, {'ma-1':!isMobile}]"
+              :start="Number(item[0])"
+              :end="(Number(item[1])*1000 + Number(item[0])*1000) / 1000"
+              :text="item[2]"
+              :selected-id="selectedId"
+              @btnClicked="onVoiceBtnClicked"
+            />
+          </v-layout>
+        </div>
+      </v-flex>
+      <portal-target name="destination" />
+    </v-layout>
   </div>
 </template>
 
@@ -274,7 +289,9 @@ import VueYoutube from 'vue-youtube'
 import VueClipboard from 'vue-clipboard2'
 import AsyncLock from "async-lock";
 import VueScrollTo from "vue-scrollto";
+import PortalVue from 'portal-vue'
 
+Vue.use(PortalVue)
 Vue.use(VueScrollTo, {
   container: ".flex-scrollable",
   duration: 500,
@@ -326,7 +343,9 @@ export default {
       showsAsr: false,
       hiddenSubtitles: [],
       canEdit: false,
-      captionStatus: ""
+      captionStatus: "",
+      isSearchBoxVisible: true,
+      mobileSearchMenu: false
     }
   },
   async asyncData({ params, query, error, $axios }) {
@@ -415,6 +434,13 @@ export default {
       captionStatus: captionStatus
     };
   },
+  computed: {
+    isMobile() {
+      return ["xs", "sm"].some(e => {
+        return this.$vuetify.breakpoint.name === e;
+      });
+    }
+  },
   watch: {
     showsAsr(showsAsr) {
       this.$router.replace({ query: showsAsr ? { show: "asr" } : {} });
@@ -428,6 +454,15 @@ export default {
       this.selectedText = "未選択";
       this.videoUrl = `https://youtu.be/${this.videoId}`;
       this.shareUrl = `${location.protocol}//${location.host}/video/${this.videoId}${showsAsr ? "?show=asr" : ""}`;
+    },
+    isMobile(val) {
+      if (val) {
+        this.$refs.scrollableSubLayout.removeEventListener("wheel", this.onScroll);
+      } else {
+        this.$refs.scrollableSubLayout.addEventListener("wheel", this.onScroll);
+      }
+
+      this.isSearchBoxVisible = !val;
     }
   },
   mounted() {
@@ -435,7 +470,12 @@ export default {
       this.$scrollTo(this.$refs[this.selectedId][0].$el);
     }
 
-    this.$refs.scrollableSubLayout.addEventListener("wheel", this.onScroll);
+    if (this.isMobile) {
+      this.isSearchBoxVisible = false;
+    } else {
+      this.$refs.scrollableSubLayout.addEventListener("wheel", this.onScroll);
+    }
+
     this.repeat();
   },
   async beforeDestroy() {
@@ -577,33 +617,19 @@ export default {
 </script>
 
 <style>
-.flex {
-  flex: 0 1 auto;
-}
 .flex-container {
-  height: calc(100vh - 170px);
-  margin-right: 20px;
-  padding: 0;
+  height: calc(100vh - 150px);
+}
+.flex-container--mobile {
+  height: calc(55vh);
 }
 .flex-scrollable {
   overflow-y: scroll;
   height: 100%;
 }
-.video-id-root {
-  margin-top: 12px;
-  padding: 0;
-}
-.video-layout {
-  margin-left: 20px;
-}
-.video-title {
-  font-size: 16px;
-  margin: 3px 0 5px 0;
-}
 .video-description {
-  font-size: 14px;
+  word-break: break-word;
   white-space: pre-wrap;
-  margin-top: 3px;
 }
 .video-description-hidden {
   display: -webkit-box;
@@ -612,10 +638,6 @@ export default {
   /* autoprefixer: on */
   -webkit-line-clamp: 3;
   overflow: hidden;
-}
-.video-info-container {
-  margin: 5px 0 0 0;
-  padding: 0 !important;
 }
 .small-button {
   margin: 0 0 0 8px;
@@ -641,19 +663,12 @@ export default {
 .button__searchbox .v-input__control .v-input__slot {
   margin-bottom: 0;
 }
-.clipboard {
-  margin: 0 15px;
-  padding: 0;
-}
 .clipboard .v-text-field {
   margin-top: 0;
   padding-top: 0;
 }
 .clipboard .v-text-field input {
   padding: 2px 0 8px;
-}
-.no-padding {
-  padding: 0 !important;
 }
 .v-swich--show-asr {
   margin-left: 10px;
@@ -675,5 +690,15 @@ export default {
   margin: 0 0 0 6px;
   height: 32px;
   padding: 0 8px;
+}
+.simple-voice-card-margin--mobile {
+  margin: 2px;
+}
+.search-button--mobile.v-btn {
+  height: 32px;
+  margin: 0;
+}
+.mobile-toolbar {
+  background-color: #424242;
 }
 </style>

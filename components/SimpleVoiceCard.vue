@@ -1,16 +1,16 @@
 <template>
-  <v-card :class="[id == selectedId ?'selected-card': 'not-selected-card']">
+  <v-card
+    style="height:auto;"
+    :class="[id == selectedId ?'selected-card': 'not-selected-card']"
+  >
     <v-btn
       :class="[id == selectedId ?'selected-card': 'not-selected-card',
                'simple-voice-card-btn']"
       depressed
+      class="text-none"
       @click="onClicked"
-    >
-      <span
-        class="text-none"
-        v-html="text"
-      />
-    </v-btn>
+      v-html="text"
+    />
   </v-card>
 </template>
 
@@ -58,5 +58,6 @@ export default {
   text-align: left;
   min-width: auto;
   padding: 0;
+  margin: 4px 8px;
 }
 </style>

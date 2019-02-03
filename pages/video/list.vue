@@ -1,10 +1,5 @@
 <template>
-  <v-container
-    v-scroll="onScroll"
-    grid-list-md
-    fluid
-    class="video-list-container"
-  >
+  <div v-scroll="onScroll">
     <caption-status-filter-help-dialog ref="captionFilterHelpDialog" />
     <v-fab-transition>
       <v-btn
@@ -23,22 +18,29 @@
     <v-layout
       align-center
       column
+      pt-3
     >
-      <v-layout align-center>
-        <v-flex>
+      <v-layout
+        align-center
+        justify-center
+        px-3
+      >
+        <v-flex md5>
           <v-select
             v-model="filter.channel"
+            :class="[{'video-filter':!isMobile}, {'video-filter--mobile':isMobile}]"
             :items="channelFilterItems"
-            :menu-props="{ maxHeight: '80vh' }"
+            :menu-props="{ maxHeight: '70vh' }"
             label="チャンネル"
             @change="onChannelFilterChanged"
           />
         </v-flex>
-        <v-flex>
+        <v-flex md5>
           <v-select
             v-model="filter.caption"
+            :class="[{'video-filter':!isMobile}, {'video-filter--mobile':isMobile}]"
             :items="captionFilterItems"
-            :menu-props="{ maxHeight: '80vh' }"
+            :menu-props="{ maxHeight: '70vh' }"
             label="字幕"
             @change="onCaptionFilterChanged"
           />
@@ -51,19 +53,18 @@
           <v-icon>help_outline</v-icon>
         </v-btn>
       </v-layout>
-      <v-flex
+      <video-card
         v-for="item in displayItems"
         :key="item[1]"
-      >
-        <video-card
-          :title="item[3]"
-          :published-at="new Date(item[2]).toLocaleString()"
-          :description="item[4]"
-          :thumbnail="item[5]"
-          :video-id="item[1]"
-          :caption-status="item[6]"
-        />
-      </v-flex>
+        class="my-1"
+        :class="[{'video-card':!isMobile}, {'video-card--mobile':isMobile}]"
+        :title="item[3]"
+        :published-at="new Date(item[2]).toLocaleString()"
+        :description="item[4]"
+        :thumbnail="item[5]"
+        :video-id="item[1]"
+        :caption-status="item[6]"
+      />
     </v-layout>
     <infinite-loading
       ref="infiniteLoading"
@@ -74,7 +75,7 @@
       <span slot="no-results" />
       <span slot="no-more" />
     </infinite-loading>
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -225,6 +226,13 @@ export default {
     store.commit("search/channelIdFilter", query.channel ? query.channel : "");
     store.commit("search/captionStatusFilter", query.caption ? query.caption : "");
   },
+  computed: {
+    isMobile() {
+      return ["xs", "sm"].some(e => {
+        return this.$vuetify.breakpoint.name === e;
+      });
+    }
+  },
   watch: {
     '$route': async function (to, from) {
       console.log("route");
@@ -298,8 +306,8 @@ export default {
     scrollToTop() {
       this.$nextTick(() => {
         this.$vuetify.goTo(0, { duration: 200, offset: 0, easing: "easeOutCubic" });
+        this.scrollToTopFab = false;
       });
-      this.scrollToTopFab = false;
     },
     openCaptionFilterHelpDialog() {
       this.$refs.captionFilterHelpDialog.open();
@@ -309,8 +317,16 @@ export default {
 </script>
 
 <style>
-.video-list-container {
-  margin: 20px 0 15px 0;
-  padding: 0;
+.video-card {
+  width: 75vw;
+}
+.video-card--mobile {
+  width: 95%;
+}
+.video-filter--mobile .v-messages {
+  min-height: 0;
+}
+.video-filter--mobile.v-text-field {
+  padding-top: 0;
 }
 </style>

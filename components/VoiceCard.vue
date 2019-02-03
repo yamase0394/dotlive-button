@@ -1,56 +1,56 @@
 <template>
-  <v-card :class="[isSelected ?'selected-card': 'not-selected-card']">
-    <v-card-actions class="voice-card-actions">
-      <v-avatar
-        class="avater"
-        size="28px"
-      >
-        <img :src="avaterUrl">
-      </v-avatar>
-      <v-tooltip
-        open-delay="500"
-        bottom
-      >
-        <v-btn
-          slot="activator"
-          :class="[isSelected ?'selected-card': 'not-selected-card']"
-          depressed
-          @click="open(); btnClicked();"
-        >
-          <span
-            class="text-none"
-            v-html="text"
-          />
-        </v-btn>
-        <span>ポップアップで再生</span>
-      </v-tooltip>
-      <v-tooltip
-        open-delay="500"
-        bottom
-      >
-        <v-btn
-          slot="activator"
-          :class="[isSelected ?'selected-card': 'not-selected-card',
-                   'voice-card__btn']"
-          depressed
-          @click="openDetail"
-        >
-          <v-icon small>
-            open_in_new
-          </v-icon>
-        </v-btn>
-        <span>動画ページを開く</span>
-      </v-tooltip>
-      <youtube-dialog-detail
-        :id="id"
-        ref="youtubeDialogDetail"
-        :start="start"
-        :end="end"
-        :video-id="videoId"
-        :text="text"
+  <v-layout
+    :class="[isSelected ?'selected-card': 'not-selected-card']"
+    row
+    align-center
+  >
+    <v-avatar
+      class="avater"
+      size="28px"
+    >
+      <img :src="avaterUrl">
+    </v-avatar>
+    <v-tooltip
+      open-delay="500"
+      bottom
+    >
+      <v-btn
+        slot="activator"
+        style="height:auto"
+        :class="[isSelected ?'selected-card': 'not-selected-card']"
+        depressed
+        class="text-none button--open-youtube-dialog"
+        @click="open(); btnClicked();"
+        v-html="text"
       />
-    </v-card-actions>
-  </v-card>
+      <span>ポップアップで再生</span>
+    </v-tooltip>
+    <v-tooltip
+      open-delay="500"
+      bottom
+    >
+      <v-btn
+        slot="activator"
+        :class="[isSelected ?'selected-card': 'not-selected-card',
+                 'button--open-video-page']"
+        depressed
+        @click="openDetail"
+      >
+        <v-icon small>
+          open_in_new
+        </v-icon>
+      </v-btn>
+      <span>動画ページを開く</span>
+    </v-tooltip>
+    <youtube-dialog-detail
+      :id="id"
+      ref="youtubeDialogDetail"
+      :start="start"
+      :end="end"
+      :video-id="videoId"
+      :text="text"
+    />
+  </v-layout>
 </template>
 
 <script>
@@ -126,12 +126,12 @@ export default {
 .selected-card {
   background-color: #1976d2 !important;
 }
-.voice-card__btn {
+.button--open-video-page {
   min-width: auto;
-  padding: 0 12px;
-  margin-left: 0 !important;
+  margin: 0;
 }
-.voice-card-actions {
-  padding: 0;
+.button--open-youtube-dialog.v-btn {
+  height: 100%;
+  margin: 0;
 }
 </style>

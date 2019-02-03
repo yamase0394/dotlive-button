@@ -4,36 +4,55 @@
     ripple
     @click.native="onCardClicked()"
   >
-    <v-container fluid>
-      <v-layout
-        justify-start
-        d-flex-inline
-        align-start
-        row
-      >
-        <v-flex>
+    <v-container pa-2>
+      <v-layout row>
+        <v-flex
+          md4
+          xs4
+          align-self-center
+        >
           <v-img
             :src="thumbnail"
             contain
-            width="246px"
-            max-width="246px"
+            aspect-ratio="1.7778"
           />
         </v-flex>
-        <v-flex xs11>
-          <v-card-title>
-            <div>
+        <v-flex
+          md8
+          xs8
+          grow
+        >
+          <v-layout
+            column
+            justify-center
+            ml-1
+            :class="{'pa-2': !isMobile}"
+          >
+            <v-flex
+              v-if="!isMobile"
+              pa-0
+            >
               <div class="grey--text">
                 {{ publishedAt }}
               </div>
+            </v-flex>
+            <v-flex
+              pa-0
+              style="overflow: hidden"
+            >
               <div
-                class="title"
+                :class="[{'body-2':isMobile}, {'title':!isMobile}]"
                 v-html="title"
               />
-              <div class="container grey--text">
-                <p v-html="description" />
-              </div>
-            </div>
-          </v-card-title>
+            </v-flex>
+            <v-flex
+              pa-0
+              :class="[{'caption':isMobile}, {'body-2':!isMobile}]"
+              class="container grey--text"
+            >
+              <p v-html="description" />
+            </v-flex>
+          </v-layout>
         </v-flex>
       </v-layout>
     </v-container>
@@ -68,6 +87,13 @@ export default {
       required: true
     }
   },
+  computed: {
+    isMobile() {
+      return ["xs", "sm"].some(e => {
+        return this.$vuetify.breakpoint.name === e;
+      });
+    }
+  },
   methods: {
     onCardClicked() {
       if (["uploaded", "dotlive_button"].some(e => e === this.captionStatus) ||
@@ -89,7 +115,10 @@ export default {
 
 <style>
 .video-card {
-  width: 100vw;
+  max-width: 850px;
+}
+.video-card:hover {
+  cursor: pointer;
 }
 .video-card .container {
   overflow: hidden;
@@ -102,18 +131,5 @@ export default {
   /* autoprefixer: on */
   -webkit-line-clamp: 2;
   margin: 0;
-}
-.title {
-  font-size: 16px;
-  margin: 3px 0 5px 0;
-}
-.v-card__title {
-  padding: 8px;
-}
-.video-card {
-  max-width: 850px;
-}
-.video-card:hover {
-  cursor: pointer;
 }
 </style>
