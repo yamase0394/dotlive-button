@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 const db = require(`../../db/db`);
+const captionAsr = require(`../../db/captionAsr`);
 const slack = require(`${process.cwd()}/server/slackbot`);
 require("dotenv").config();
 
@@ -63,6 +64,39 @@ router.post("/get", async function(req, res, next) {
     );
 
     res.send({ items: items });
+  } catch (e) {
+    next({ message: e.stack });
+    res.sendStatus(500);
+  }
+});
+
+//計算誤差がある
+router.post("/get/asr", async function(req, res, next) {
+  try {
+    const resultRow = await captionAsr.searchByVideoIdAndSec(
+      req.body.videoId,
+      req.body.sec
+    );
+    if (!resultRow) {
+      res.sendStatus(404);
+      return;
+    }
+
+    const nextRow = await captionAsr.searchByIdAndVideoId(
+      resultRow.id + 1,
+      req.body.videoId
+    );
+    if (nextRow) {
+      const resultStart = Number(resultRow.start);
+      const nextStart = Number(nextRow.start);
+      if (resultStart + Number(resultRow.dur) > nextStart) {
+        resultRow.dur = String(
+          Math.floor((nextStart * 1000 - resultStart * 1000) / 1000)
+        );
+      }
+    }
+
+    res.send({ item: resultRow });
   } catch (e) {
     next({ message: e.stack });
     res.sendStatus(500);

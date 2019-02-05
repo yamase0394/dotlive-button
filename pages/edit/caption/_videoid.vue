@@ -409,14 +409,29 @@
       >
         <div class="subtitle-container">
           <v-layout
-            justify-space-between
+            justify-start
             row
+            wrap
           >
             <v-btn @click="addSubtitleCard">
-              <v-icon left>
-                add_comment
-              </v-icon>字幕を追加
+              字幕を追加
             </v-btn>
+            <v-tooltip
+              open-delay="500"
+              style="height:auto;"
+              bottom
+            >
+              <v-btn
+                slot="activator"
+                :block="isMobile"
+                @click="addSubtitleCardFromAsr"
+              >
+                <span style="white-space: normal;">
+                  再生位置にある自動生成字幕を追加
+                </span>
+              </v-btn>
+              <span>YouTubeの字幕表示と合わせて使用すると良いです。YouTubeの字幕はドラッグで移動できます。</span>
+            </v-tooltip>
           </v-layout>
           <v-radio-group
             v-model="selectedId"
@@ -630,6 +645,26 @@ export default {
         this.$refs.recycleScroller.scrollToItem(this.subtitleList.length - 1);
         this.selectedId = id;
       });
+    },
+    async addSubtitleCardFromAsr() {
+      const currentTime = await this.$refs.youtube.player.getCurrentTime();
+      try {
+        const item = (await this.$axios.$post("/api/edit/subtitle/get/asr", { videoId: this.videoId, sec: currentTime })).item;
+        if (!item) {
+          return;
+        }
+
+        const id = Math.max(...this.subtitleList.map(e => e.id), 0) + 1;
+        const start = Number(item.start);
+        const end = Math.floor(start * 1000 + Number(item.dur) * 1000) / 1000;
+        this.subtitleList.push({ id: id, start: start, end: end, text: item.text, hasError: false });
+
+        this.sortAndCheckOrder();
+        this.selectedId = id;
+      } catch (e) {
+        console.log(e);
+        this.showErrorSnackbar("該当する字幕がありません");
+      }
     },
     onSubtitleCardSelected(id) {
       this.selectedId = id;

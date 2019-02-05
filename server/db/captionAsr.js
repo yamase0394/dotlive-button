@@ -106,4 +106,34 @@ captionAsr.updateCount = async (id, count) => {
   return await client.query(query);
 };
 
+/**
+ * @param {string} videoId
+ * @param {number} sec
+ * @returns {Object[]} start <= sec <= start + durに該当する行
+ */
+captionAsr.searchByVideoIdAndSec = async (videoId, sec) => {
+  const query = {
+    name: "search-by-video-id-and-sec",
+    text:
+      "SELECT * FROM caption_asr WHERE video_id = $1 AND start = (SELECT max(start) FROM caption_asr WHERE video_id = $1 AND $2 BETWEEN start AND start + dur)",
+    values: [videoId, sec]
+  };
+
+  const result = await client.query(query);
+  result.rows.id = String(result.rows.id);
+  return result.rows[0];
+};
+
+captionAsr.searchByIdAndVideoId = async (id, videoId) => {
+  const query = {
+    name: "search-by-id-and-video-id",
+    text: "SELECT * FROM caption_asr WHERE id = $1 AND video_id = $2",
+    values: [id, videoId]
+  };
+
+  const result = await client.query(query);
+  result.rows.id = String(result.rows.id);
+  return result.rows[0];
+};
+
 module.exports = captionAsr;
