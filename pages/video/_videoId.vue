@@ -1,12 +1,6 @@
 <template>
   <div>
-    <v-snackbar
-      v-model="snackbar"
-      :timeout="2000"
-      top
-    >
-      {{ snackbarText }}
-    </v-snackbar>
+    <notification-snackbar ref="notificationSnackbar" />
     <v-layout
       row
       wrap
@@ -284,6 +278,7 @@
 
 <script>
 import SimpleVoiceCard from '~/components/SimpleVoiceCard.vue'
+import NotificationSnackbar from "~/components/NotificationSnackbar.vue"
 import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
 import VueClipboard from 'vue-clipboard2'
@@ -314,6 +309,7 @@ const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));
 export default {
   watchQuery: [],
   components: {
+    NotificationSnackbar,
     SimpleVoiceCard
   },
   data() {
@@ -335,8 +331,6 @@ export default {
       selectedText: "",
       expandDescriptionBtnText: "もっと見る",
       videoUrl: "",
-      snackbar: false,
-      snackbarText: "",
       shareUrl: "",
       isAsr: false,
       isPartial: false,
@@ -552,12 +546,10 @@ export default {
       }
     },
     onCopy() {
-      this.snackbarText = "クリップボードにコピーしました";
-      this.snackbar = true;
+      this.$refs.notificationSnackbar.showSuccessSnackbar("クリップボードにコピーしました", 3000);
     },
     onCopyError() {
-      this.snackbarText = "コピーに失敗しました";
-      this.snackbar = true;
+      this.$refs.notificationSnackbar.showErrorSnackbar("コピーに失敗しました", 3000);
     },
     openVideoInNewTab() {
       window.open(this.videoUrl);

@@ -1,38 +1,6 @@
 <template>
   <div>
-    <v-snackbar
-      v-model="snackbar"
-      :color="snackbarColor"
-      :timeout="8000"
-      top
-    >
-      {{ snackbarText }}
-      <v-btn
-        dark
-        flat
-        @click="snackbar = false"
-      >
-        閉じる
-      </v-btn>
-    </v-snackbar>
-    <v-snackbar
-      v-model="errorSnackbar"
-      :timeout="8000"
-      color="error"
-      top
-    >
-      {{ snackbarText }}
-      <v-btn
-        dark
-        flat
-        @click="() => {
-          $refs.recycleScroller.scrollToItem(errorIndex);
-          errorSnackbar = false;
-        }"
-      >
-        該当箇所に移動
-      </v-btn>
-    </v-snackbar>
+    <notification-snackbar ref="notificationSnackbar" />
     <v-dialog
       v-model="progressDialog"
       persistent
@@ -49,62 +17,8 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-    <v-dialog
-      v-model="notificationDialog"
-      max-width="420px"
-      persistent
-    >
-      <v-card>
-        <v-card-text>
-          <ul>
-            <li
-              v-for="(text, index) in notificationDialogTextaList"
-              :key="index"
-              style="margin-top:10px"
-            >
-              <strong>
-                {{ text }}
-              </strong>
-            </li>
-          </ul>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            flat="flat"
-            @click="notificationDialog = false"
-          >
-            閉じる
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-    <v-dialog
-      v-model="confirmDialog"
-      max-width="300px"
-    >
-      <v-card>
-        <v-card-text>{{ confirmDialogText }}</v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            flat
-            @click="confirmDialog = false"
-          >
-            キャンセル
-          </v-btn>
-          <v-btn
-            :color="confirmDialogAceeptButtonColor"
-            @click="() => {
-              confirmDialog = false;
-              confirmDialogAcceptFunction()
-            }"
-          >
-            {{ confirmDialogAcceptText }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <notification-dialog ref="notificationDialog" />
+    <confirm-dialog ref="confirmDialog" />
     <input
       v-show="false"
       ref="pickFile"
@@ -474,6 +388,9 @@
 import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
 import SubtitleCard from "~/components/SubtitleCard.vue"
+import NotificationDialog from "~/components/NotificationDialog.vue"
+import NotificationSnackbar from "~/components/NotificationSnackbar.vue"
+import ConfirmDialog from "~/components/ConfirmDialog.vue"
 import download from "downloadjs"
 import parseSRT from 'parse-srt'
 import { RecycleScroller } from 'vue-virtual-scroller'
@@ -487,6 +404,9 @@ Vue.use(VueYoutube)
 export default {
   components: {
     SubtitleCard,
+    NotificationDialog,
+    ConfirmDialog,
+    NotificationSnackbar,
     RecycleScroller,
   },
   data() {
@@ -504,19 +424,7 @@ export default {
       subtitleList: [],
       displaySubtitle: "",
       currentTime: 0,
-      snackbar: false,
-      snackbarText: "",
-      snackbarColor: "",
       progressDialog: false,
-      notificationDialog: false,
-      notificationDialogTextaList: [],
-      confirmDialog: false,
-      confirmDialogText: "",
-      confirmDialogAcceptText: "",
-      confirmDialogAcceptFunction: null,
-      confirmDialogAceeptButtonColor: "green darken-1",
-      errorSnackbar: false,
-      errorIndex: -1,
       socket: "",
       connectionCount: 1,
       existsCaptionOnServer: false
@@ -591,15 +499,13 @@ export default {
     this.socket.disconnect();
     this.destroyed = true;
   },
-  created() {
+  mounted() {
     const messageList = [];
     if (this.$route.query.status.includes("editable")) {
       messageList.push("重複して編集してしまう可能性があるので、YouTubeに編集中の字幕がないか確認してください");
     }
-
     this.showNotificationDialog(messageList);
-  },
-  mounted() {
+
     this.socket = io();
     this.socket.on("connectionCount", message => {
       this.connectionCount = message.connectionCount;
@@ -721,7 +627,8 @@ export default {
       });
     },
     sortAndCheckOrder() {
-      this.errorSnackbar = false;
+      this.$refs.notificationSnackbar.close();
+      let isSnackbarVisible = false;
 
       this.subtitleList.sort((a, b) => {
         if (a.start > b.start) {
@@ -760,8 +667,9 @@ export default {
             this.$refs[oneBefore.id].error(true);
           }
 
-          if (!this.errorSnackbar) {
+          if (!isSnackbarVisible) {
             this.showSubtitleListErrorSnackbar("時間が重なっています", i - 1);
+            isSnackbarVisible = true;
           }
 
           continue;
@@ -773,8 +681,9 @@ export default {
             this.$refs[target.id].error(true);
           }
 
-          if (!this.errorSnackbar) {
+          if (!isSnackbarVisible) {
             this.showSubtitleListErrorSnackbar("開始時間と終了時間が同じです", i);
+            isSnackbarVisible = true;
           }
 
           continue;
@@ -951,34 +860,19 @@ export default {
       this.formatEndTime(this.selectedEnd);
     },
     showSuccessSnackbar(message) {
-      this.snackbarText = message;
-      this.snackbarColor = "success";
-      this.snackbar = true;
+      this.$refs.notificationSnackbar.showSuccessSnackbar(message, 8000);
     },
     showErrorSnackbar(message) {
-      this.snackbarText = message;
-      this.snackbarColor = "error";
-      this.snackbar = true;
+      this.$refs.notificationSnackbar.showErrorSnackbar(message, 8000);
     },
     showSubtitleListErrorSnackbar(message, errorIndex) {
-      this.errorIndex = errorIndex;
-      this.snackbarText = message;
-      this.errorSnackbar = true;
+      this.$refs.notificationSnackbar.showErrorSnackbar(message, 8000, () => { this.$refs.recycleScroller.scrollToItem(errorIndex) }, "該当箇所に移動");
     },
     showNotificationDialog(messageList) {
-      if (messageList.length === 0) {
-        return;
-      }
-
-      this.notificationDialogTextaList = messageList;
-      this.notificationDialog = true;
+      this.$refs.notificationDialog.open(messageList);
     },
-    showConfirmDialog(message, acceptButtonText, onAcceptedFunction, acceptButtionColor) {
-      this.confirmDialogText = message;
-      this.confirmDialogAcceptText = acceptButtonText;
-      this.confirmDialogAcceptFunction = onAcceptedFunction;
-      this.confirmDialogAceeptButtonColor = acceptButtionColor;
-      this.confirmDialog = true;
+    showConfirmDialog(message, acceptButtonText, onAcceptedFunction, acceptButtonColor) {
+      this.$refs.confirmDialog.open(message, onAcceptedFunction, acceptButtonText, acceptButtonColor);
     }
   }
 }
