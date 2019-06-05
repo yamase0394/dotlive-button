@@ -338,7 +338,8 @@ db.getChannelList = function() {
     "UCP9ZgeIJ3Ri9En69R0kJc9Q",
     "UCUZ5AlC3rTlM-rA2cj5RP6w",
     "UCyb-cllCkMREr9de-hoiDrg",
-    "UCz6Gi81kE6p5cdW1rT0ixqw"
+    "UCz6Gi81kE6p5cdW1rT0ixqw",
+    "UCAZ_LA7f0sjuZ1Ni8L2uITw"
   ];
 };
 
