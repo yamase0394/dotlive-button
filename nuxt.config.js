@@ -136,5 +136,6 @@ module.exports = {
         }, 500);
       });
     }
-  }
+  },
+  serverMiddleware: ["redirect-ssl"]
 };
